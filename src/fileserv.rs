@@ -1,4 +1,4 @@
-use crate::app::App;
+use crate::web::app::App;
 use axum::response::Response as AxumResponse;
 use axum::{
     body::Body,

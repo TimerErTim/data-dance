@@ -1,6 +1,8 @@
+mod config;
+pub mod context;
 pub mod error_template;
-#[cfg(feature = "ssr")]
-pub mod fileserv;
+mod objects;
+mod services;
 pub mod web;
 
 #[cfg(feature = "hydrate")]

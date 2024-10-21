@@ -1,11 +1,19 @@
+mod config;
+mod context;
+mod error_template;
+mod file_metadata;
+mod jobs;
+mod objects;
+mod scripts;
+mod services;
 mod web;
 
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
     use axum::Router;
-    use data_dance::fileserv::file_and_error_handler;
-    use data_dance::web::app::*;
+    //use crate::fileserv::file_and_error_handler;
+    use crate::web::app::*;
     use leptos::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
 
@@ -22,7 +30,7 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         .leptos_routes(&leptos_options, routes, App)
-        .fallback(file_and_error_handler)
+        //.fallback(file_and_error_handler)
         .with_state(leptos_options);
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
