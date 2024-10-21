@@ -1,6 +1,11 @@
+use serde::{Deserialize, Serialize};
+
+mod load;
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DataDanceConfiguration {
     pub port: u16,
     pub host: String,
 
-    pub encryption: crate::objects::encryption::EncryptionLevel,
+    pub encryption_password: Option<String>,
 }

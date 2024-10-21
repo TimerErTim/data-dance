@@ -1,5 +1,4 @@
-use crate::objects::CompressionLevel;
-use data_dance::objects::encryption::EncryptionLevel;
+use crate::objects::{CompressionLevel, EncryptionLevel};
 use std::path::PathBuf;
 
 pub struct FullDataBackupJobOptions {

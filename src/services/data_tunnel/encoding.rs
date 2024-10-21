@@ -1,4 +1,4 @@
-use crate::objects::CompressionLevel;
+use crate::objects::{CompressionLevel, EncryptionLevel};
 use crate::services::data_tunnel::DataTunnel;
 use std::io;
 use std::io::{Read, Write};
@@ -6,7 +6,7 @@ use std::io::{Read, Write};
 #[derive(Clone)]
 pub struct EncodingDataTunnel {
     pub compression_level: CompressionLevel,
-    pub encryption_level: crate::objects::encryption::EncryptionLevel,
+    pub encryption_level: EncryptionLevel,
 }
 
 impl DataTunnel for EncodingDataTunnel {
@@ -34,7 +34,7 @@ mod tests {
     fn test_encoding_data_tunnel_tunnel() {
         let mut tunnel = EncodingDataTunnel {
             compression_level: CompressionLevel::None,
-            encryption_level: crate::objects::encryption::EncryptionLevel::None,
+            encryption_level: EncryptionLevel::None,
         };
 
         let input = b"Hello, world!";
@@ -53,7 +53,7 @@ mod tests {
     fn test_encoding_data_tunnel_tunnel_with_compression() {
         let mut tunnel = EncodingDataTunnel {
             compression_level: CompressionLevel::Best,
-            encryption_level: crate::objects::encryption::EncryptionLevel::None,
+            encryption_level: EncryptionLevel::None,
         };
 
         let input = b"Hello, world!";
@@ -71,7 +71,7 @@ mod tests {
     fn test_encoding_data_tunnel_tunnel_with_encryption() {
         let mut tunnel = EncodingDataTunnel {
             compression_level: CompressionLevel::None,
-            encryption_level: crate::objects::encryption::EncryptionLevel::Symmetrical {
+            encryption_level: EncryptionLevel::Symmetrical {
                 password: "pwd123".to_string(),
             },
         };

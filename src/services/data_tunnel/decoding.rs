@@ -1,4 +1,4 @@
-use crate::objects::CompressionLevel;
+use crate::objects::{CompressionLevel, EncryptionLevel};
 use crate::services::data_tunnel::DataTunnel;
 use std::io;
 use std::io::{BufRead, Read, Write};
@@ -6,7 +6,7 @@ use std::io::{BufRead, Read, Write};
 #[derive(Clone)]
 pub struct DecodingDataTunnel {
     pub compression_level: CompressionLevel,
-    pub encryption_level: crate::objects::encryption::EncryptionLevel,
+    pub encryption_level: EncryptionLevel,
 }
 
 impl DataTunnel for DecodingDataTunnel {
@@ -34,7 +34,7 @@ mod tests {
     #[derive(Clone)]
     struct TunnelOptions {
         compression_level: CompressionLevel,
-        encryption_level: crate::objects::encryption::EncryptionLevel,
+        encryption_level: EncryptionLevel,
     }
 
     fn test_preserve(input: &str, options: TunnelOptions) {
@@ -76,7 +76,7 @@ mod tests {
             "Hello, world!",
             TunnelOptions {
                 compression_level: CompressionLevel::None,
-                encryption_level: crate::objects::encryption::EncryptionLevel::None,
+                encryption_level: EncryptionLevel::None,
             },
         );
 
@@ -84,7 +84,7 @@ mod tests {
             "Hello, world!",
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
-                encryption_level: crate::objects::encryption::EncryptionLevel::None,
+                encryption_level: EncryptionLevel::None,
             },
         );
 
@@ -92,7 +92,7 @@ mod tests {
             "Hello, world!",
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
-                encryption_level: crate::objects::encryption::EncryptionLevel::Symmetrical {
+                encryption_level: EncryptionLevel::Symmetrical {
                     password: "pwd123".to_string(),
                 },
             },
@@ -105,13 +105,13 @@ mod tests {
             "Hello, world!",
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
-                encryption_level: crate::objects::encryption::EncryptionLevel::Symmetrical {
+                encryption_level: EncryptionLevel::Symmetrical {
                     password: "pwd123".to_string(),
                 },
             },
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
-                encryption_level: crate::objects::encryption::EncryptionLevel::None,
+                encryption_level: EncryptionLevel::None,
             },
         );
         assert!(result.is_err());
@@ -120,11 +120,11 @@ mod tests {
             "Hello, world!",
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
-                encryption_level: crate::objects::encryption::EncryptionLevel::None,
+                encryption_level: EncryptionLevel::None,
             },
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
-                encryption_level: crate::objects::encryption::EncryptionLevel::Symmetrical {
+                encryption_level: EncryptionLevel::Symmetrical {
                     password: "pwd123".to_string(),
                 },
             },
@@ -135,13 +135,13 @@ mod tests {
             "Hello, world!",
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
-                encryption_level: crate::objects::encryption::EncryptionLevel::Symmetrical {
+                encryption_level: EncryptionLevel::Symmetrical {
                     password: "pwd123".to_string(),
                 },
             },
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
-                encryption_level: crate::objects::encryption::EncryptionLevel::Symmetrical {
+                encryption_level: EncryptionLevel::Symmetrical {
                     password: "123456".to_string(),
                 },
             },
@@ -155,11 +155,11 @@ mod tests {
             "Hello, world!",
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
-                encryption_level: crate::objects::encryption::EncryptionLevel::None,
+                encryption_level: EncryptionLevel::None,
             },
             TunnelOptions {
                 compression_level: CompressionLevel::Balanced,
-                encryption_level: crate::objects::encryption::EncryptionLevel::None,
+                encryption_level: EncryptionLevel::None,
             },
         )
         .unwrap();
@@ -169,11 +169,11 @@ mod tests {
             "Hello, world!",
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
-                encryption_level: crate::objects::encryption::EncryptionLevel::None,
+                encryption_level: EncryptionLevel::None,
             },
             TunnelOptions {
                 compression_level: CompressionLevel::None,
-                encryption_level: crate::objects::encryption::EncryptionLevel::None,
+                encryption_level: EncryptionLevel::None,
             },
         )
         .unwrap();
@@ -183,11 +183,11 @@ mod tests {
             "Hello, world!",
             TunnelOptions {
                 compression_level: CompressionLevel::None,
-                encryption_level: crate::objects::encryption::EncryptionLevel::None,
+                encryption_level: EncryptionLevel::None,
             },
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
-                encryption_level: crate::objects::encryption::EncryptionLevel::None,
+                encryption_level: EncryptionLevel::None,
             },
         );
         assert!(result.is_err());

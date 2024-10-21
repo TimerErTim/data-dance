@@ -1,7 +1,6 @@
 mod config;
 mod context;
 mod error_template;
-mod file_metadata;
 mod jobs;
 mod objects;
 mod scripts;

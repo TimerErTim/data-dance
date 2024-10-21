@@ -61,7 +61,7 @@ impl<DT: DataTunnel, R: Read + 'static, W: Write + 'static> TrackedTransfer<DT, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::objects::CompressionLevel;
+    use crate::objects::{CompressionLevel, EncryptionLevel};
     use crate::services::channels::ChannelWriter;
     use crate::services::data_tunnel::encoding::EncodingDataTunnel;
     use std::io::Cursor;
@@ -71,7 +71,7 @@ mod tests {
     fn test_tracking_data_tunnel() {
         let tunnel = EncodingDataTunnel {
             compression_level: CompressionLevel::Best,
-            encryption_level: crate::objects::encryption::EncryptionLevel::Symmetrical {
+            encryption_level: EncryptionLevel::Symmetrical {
                 password: "pwd123".to_string(),
             },
         };
