@@ -47,7 +47,7 @@ impl EncryptionLevel {
             EncryptionLevel::None => Box::new(w),
             EncryptionLevel::Symmetrical { password } => {
                 let cipher = Cipher::aes_256_cbc();
-                let (key, iv) = EncryptionLevel::key_iv_for_cipher(&cipher, &password);
+                let (key, iv) = EncryptionLevel::key_iv_for_cipher(&cipher, password.insecure());
                 Box::new(cryptostream::write::Encryptor::new(w, cipher, &key, &iv).unwrap())
             }
         }
@@ -58,7 +58,7 @@ impl EncryptionLevel {
             EncryptionLevel::None => Box::new(r),
             EncryptionLevel::Symmetrical { password } => {
                 let cipher = Cipher::aes_256_cbc();
-                let (key, iv) = EncryptionLevel::key_iv_for_cipher(&cipher, &password);
+                let (key, iv) = EncryptionLevel::key_iv_for_cipher(&cipher, password.insecure());
                 Box::new(cryptostream::read::Decryptor::new(r, cipher, &key, &iv).unwrap())
             }
         }
@@ -83,7 +83,7 @@ mod tests {
     #[test]
     fn test_information_preserve() {
         let encryption = EncryptionLevel::Symmetrical {
-            password: "password".to_string(),
+            password: "password".into(),
         };
 
         let input = [1, 2, 4, 8, 16, 32, 64, 128, 255];

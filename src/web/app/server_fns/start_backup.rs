@@ -5,5 +5,6 @@ use leptos::{server, ServerFnError};
 pub async fn start_incremental_backup(
     compression_level: CompressionLevel,
 ) -> Result<(), ServerFnError> {
+    println!("Compression level: {:?}", compression_level);
     Ok(())
 }

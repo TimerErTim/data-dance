@@ -1,8 +1,5 @@
-mod config;
-pub mod context;
 pub mod error_template;
 mod objects;
-mod services;
 pub mod web;
 
 #[cfg(feature = "hydrate")]

@@ -13,6 +13,7 @@ async fn main() {
     use axum::Router;
     //use crate::fileserv::file_and_error_handler;
     use crate::web::app::*;
+    use data_dance::web::routes::fileserv::file_and_error_handler;
     use leptos::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
 
@@ -26,10 +27,12 @@ async fn main() {
     let addr = leptos_options.site_addr;
     let routes = generate_route_list(App);
 
+    let dd_config = config::load::read_config_from_env().unwrap();
+
     // build our application with a route
     let app = Router::new()
         .leptos_routes(&leptos_options, routes, App)
-        //.fallback(file_and_error_handler)
+        .fallback(file_and_error_handler)
         .with_state(leptos_options);
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();

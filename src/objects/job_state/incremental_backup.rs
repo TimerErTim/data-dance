@@ -23,4 +23,5 @@ pub struct IncrementalBackupUploadState {
     bytes_written: usize,
     compression_level: CompressionLevel,
     encrypted: bool,
+    storing_metadata: bool,
 }

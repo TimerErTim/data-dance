@@ -10,8 +10,6 @@ pub struct BackupHistory {
 pub struct BackupEntry {
     id: u32,
     timestamp: u64,
-    compression_level: CompressionLevel,
-    encrypted: bool,
     remote_filename: String,
     local_snapshot: String,
     parent: Option<u32>,

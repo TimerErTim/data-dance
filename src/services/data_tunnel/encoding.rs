@@ -32,21 +32,36 @@ mod tests {
 
     #[test]
     fn test_encoding_data_tunnel_tunnel() {
-        let mut tunnel = EncodingDataTunnel {
+        let tunnel = EncodingDataTunnel {
             compression_level: CompressionLevel::None,
             encryption_level: EncryptionLevel::None,
         };
 
-        let input = b"Hello, world!";
+        let input = b"Hello, world!".repeat(10);
+        let (tx, rx) = mpsc::channel();
+
+        tunnel
+            .transfer(Cursor::new(input.clone()), ChannelWriter::new(tx))
+            .unwrap();
+
+        let output_uncompressed: Vec<u8> = rx.iter().collect();
+
+        assert_ne!(output_uncompressed.as_slice(), input);
+
+        let tunnel = EncodingDataTunnel {
+            compression_level: CompressionLevel::Fast,
+            encryption_level: EncryptionLevel::None,
+        };
+
         let (tx, rx) = mpsc::channel();
 
         tunnel
             .transfer(Cursor::new(input), ChannelWriter::new(tx))
             .unwrap();
 
-        let output: Vec<u8> = rx.iter().collect();
+        let output_compressed: Vec<u8> = rx.iter().collect();
 
-        assert_eq!(output.as_slice(), input);
+        assert_ne!(output_uncompressed, output_compressed);
     }
 
     #[test]
@@ -72,7 +87,7 @@ mod tests {
         let mut tunnel = EncodingDataTunnel {
             compression_level: CompressionLevel::None,
             encryption_level: EncryptionLevel::Symmetrical {
-                password: "pwd123".to_string(),
+                password: "pwd123".into(),
             },
         };
 

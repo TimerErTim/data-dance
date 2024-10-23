@@ -72,7 +72,7 @@ mod tests {
         let tunnel = EncodingDataTunnel {
             compression_level: CompressionLevel::Best,
             encryption_level: EncryptionLevel::Symmetrical {
-                password: "pwd123".to_string(),
+                password: "pwd123".into(),
             },
         };
 

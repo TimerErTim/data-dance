@@ -4,13 +4,15 @@ use std::env::VarError;
 use std::fs;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
+use wasm_bindgen::convert::IntoWasmAbi;
 
 pub fn read_config_from_env() -> Result<DataDanceConfiguration, ConfigLoadError> {
-    let default_path = PathBuf::from("/opt/data-dance/config.toml");
+    let home_dir = fs::canonicalize("~").unwrap_or("~".into());
+    let default_path = home_dir.join(".datadance/config.toml");
 
     let mut env_var_set = true;
     let path = match std::env::var("DATA_DANCE_CONFIG") {
-        Ok(env_path) => PathBuf::from(env_path),
+        Ok(env_path) => fs::canonicalize(&env_path).unwrap_or(env_path.into()),
         Err(_) => {
             env_var_set = false;
             default_path.clone()

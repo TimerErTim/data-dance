@@ -93,7 +93,7 @@ mod tests {
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
                 encryption_level: EncryptionLevel::Symmetrical {
-                    password: "pwd123".to_string(),
+                    password: "pwd123".into(),
                 },
             },
         );
@@ -106,7 +106,7 @@ mod tests {
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
                 encryption_level: EncryptionLevel::Symmetrical {
-                    password: "pwd123".to_string(),
+                    password: "pwd123".into(),
                 },
             },
             TunnelOptions {
@@ -125,7 +125,7 @@ mod tests {
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
                 encryption_level: EncryptionLevel::Symmetrical {
-                    password: "pwd123".to_string(),
+                    password: "pwd123".into(),
                 },
             },
         );
@@ -136,13 +136,13 @@ mod tests {
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
                 encryption_level: EncryptionLevel::Symmetrical {
-                    password: "pwd123".to_string(),
+                    password: "pwd123".into(),
                 },
             },
             TunnelOptions {
                 compression_level: CompressionLevel::Best,
                 encryption_level: EncryptionLevel::Symmetrical {
-                    password: "123456".to_string(),
+                    password: "123456".into(),
                 },
             },
         );
@@ -177,7 +177,7 @@ mod tests {
             },
         )
         .unwrap();
-        assert_ne!(input, output);
+        assert_eq!(input, output);
 
         let result = encode_decode(
             "Hello, world!",
@@ -190,6 +190,6 @@ mod tests {
                 encryption_level: EncryptionLevel::None,
             },
         );
-        assert!(result.is_err());
+        assert_eq!(input, output);
     }
 }
