@@ -12,5 +12,5 @@ pub struct JobStates {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum BackupJobState {
-    Incremental(IncrementalBackupJobState),
+    Incremental(IncrementalBackupState),
 }

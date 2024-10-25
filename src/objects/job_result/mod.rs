@@ -6,5 +6,5 @@ pub use incremental_backup::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum JobResult {
-    IncrementalBackup(IncrementalBackupJobResult),
+    IncrementalBackup(IncrementalBackupResult),
 }

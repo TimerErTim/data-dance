@@ -2,6 +2,7 @@ use std::io::{BufRead, Read, Write};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct BytesCounter {
     bytes_amount: Arc<AtomicUsize>,
 }

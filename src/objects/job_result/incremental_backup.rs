@@ -2,10 +2,10 @@ use crate::objects::CompressionLevel;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct IncrementalBackupJobResult {
-    started_at: chrono::DateTime<chrono::Utc>,
-    finished_at: chrono::DateTime<chrono::Utc>,
-    state: IncrementalBackupResultState,
+pub struct IncrementalBackupResult {
+    pub started_at: chrono::DateTime<chrono::Utc>,
+    pub finished_at: chrono::DateTime<chrono::Utc>,
+    pub state: IncrementalBackupResultState,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -16,11 +16,11 @@ pub enum IncrementalBackupResultState {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct IncrementalBackupUploadResult {
-    parent: Option<i32>,
-    remote_filename: String,
-    local_snapshot: String,
-    bytes_read: usize,
-    bytes_written: usize,
-    compression_level: CompressionLevel,
-    encrypted: bool,
+    pub parent: Option<u32>,
+    pub remote_filename: String,
+    pub local_snapshot: String,
+    pub bytes_read: usize,
+    pub bytes_written: usize,
+    pub compression_level: CompressionLevel,
+    pub encrypted: bool,
 }

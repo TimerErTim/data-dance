@@ -1,3 +1,4 @@
+use crate::config::DataDanceConfiguration;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +11,8 @@ mod variants;
 pub trait Job {
     type CompletionStats: Serialize + DeserializeOwned;
     type RunningStats: Serialize + DeserializeOwned;
+
+    fn from_config(config: DataDanceConfiguration) -> Self;
 
     fn run(&self) -> Self::CompletionStats;
 

@@ -1,3 +1,5 @@
+#![feature(path_add_extension)]
+
 mod config;
 mod context;
 mod error_template;

@@ -37,6 +37,14 @@ impl<DT: DataTunnel, R: Read + 'static, W: Write + 'static> TrackedTransfer<DT, 
         self.writer_bytes_count.value()
     }
 
+    pub fn reader_bytes_counter(&self) -> BytesCounter {
+        self.reader_bytes_count.clone()
+    }
+
+    pub fn writer_bytes_counter(&self) -> BytesCounter {
+        self.writer_bytes_count.clone()
+    }
+
     pub fn run(&self) -> std::io::Result<()> {
         let mut reader = self.reader.borrow_mut();
         let reader = reader.deref_mut();

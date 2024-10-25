@@ -1,22 +1,22 @@
-use crate::objects::CompressionLevel;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BackupHistory {
-    entries: Vec<BackupEntry>,
+    pub entries: Vec<BackupEntry>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BackupEntry {
-    id: u32,
-    timestamp: u64,
-    remote_filename: String,
-    local_snapshot: String,
-    parent: Option<u32>,
-    backup_type: BackupType,
+    pub id: u32,
+    pub parent: Option<u32>,
+    pub timestamp: u64,
+    pub remote_filename: PathBuf,
+    pub local_snapshot: PathBuf,
+    pub backup_type: BackupType,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum BackupType {
     Full,
     Incremental,

@@ -15,3 +15,20 @@ impl Debug for EncryptionLevel {
         }
     }
 }
+
+impl From<SensitiveString> for EncryptionLevel {
+    fn from(value: SensitiveString) -> Self {
+        EncryptionLevel::Symmetrical { password: value }
+    }
+}
+
+impl<T: Into<SensitiveString>> From<Option<T>> for EncryptionLevel {
+    fn from(value: Option<T>) -> Self {
+        match value {
+            Some(value) => EncryptionLevel::Symmetrical {
+                password: value.into(),
+            },
+            None => EncryptionLevel::None,
+        }
+    }
+}

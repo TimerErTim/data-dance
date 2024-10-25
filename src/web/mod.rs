@@ -1,2 +1,3 @@
 pub mod app;
-mod routes;
+#[cfg(feature = "ssr")]
+pub mod routes;
