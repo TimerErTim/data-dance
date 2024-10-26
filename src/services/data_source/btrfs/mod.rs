@@ -96,7 +96,7 @@ impl SourceService for BtrfsSourceService {
 
         for snapshot in all_snapshots {
             let snapshot_name = PathBuf::from(snapshot.file_name().unwrap());
-            let mut retained = true;
+            let mut retained = false;
 
             for entry in latest_backup_entries.iter() {
                 if snapshot.ends_with(&entry.local_snapshot) {
