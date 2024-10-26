@@ -95,7 +95,6 @@ impl SourceService for BtrfsSourceService {
         let latest_backup_entries: Vec<_> = backup_entries.into_iter().rev().take(2).collect();
 
         for snapshot in all_snapshots {
-            let snapshot_name = PathBuf::from(snapshot.file_name().unwrap());
             let mut retained = false;
 
             for entry in latest_backup_entries.iter() {
@@ -109,14 +108,13 @@ impl SourceService for BtrfsSourceService {
             if retained {
                 continue;
             }
-            println!("will delete local snapshot '{}'", snapshot_name.display());
             expired_snapshots.push(snapshot);
         }
 
         for expired_snapshot in expired_snapshots {
             let mut remove_subv_command = std::process::Command::new("btrfs");
             remove_subv_command
-                .args(["subvolume", "delete"])
+                .args(["subvolume", "delete", "-c"])
                 .arg(&expired_snapshot);
             let remove_subv_status = remove_subv_command.status()?;
             if !remove_subv_status.success() {
