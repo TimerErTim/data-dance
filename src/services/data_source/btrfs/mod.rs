@@ -89,10 +89,14 @@ impl SourceService for BtrfsSourceService {
         let mut expired_snapshots = Vec::new();
 
         for snapshot in all_snapshots {
+            let snapshot_name = PathBuf::from(snapshot.file_name().unwrap());
             let mut retained = true;
 
             for entry in backup_history.entries.iter() {
-                println!("eq: {}", dbg!(&snapshot) == dbg!(&entry.local_snapshot));
+                println!(
+                    "eq: {}",
+                    dbg!(&snapshot_name) == dbg!(&entry.local_snapshot)
+                );
 
                 if snapshot.ends_with(&entry.local_snapshot) {
                     retained = true;
