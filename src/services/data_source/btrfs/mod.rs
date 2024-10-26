@@ -6,6 +6,7 @@ use std::io;
 use std::io::{Stdout, Write};
 use std::path::PathBuf;
 use std::process::{Child, Stdio};
+use thiserror::__private::AsDisplay;
 
 pub struct BtrfsSourceService {
     pub snapshot_folder: PathBuf,
@@ -88,18 +89,19 @@ impl SourceService for BtrfsSourceService {
             .collect::<Vec<_>>();
         let mut expired_snapshots = Vec::new();
 
+        let mut backup_entries = backup_history.entries.clone();
+        backup_entries.sort_by_key(|entry| entry.timestamp);
+        backup_entries.reverse();
+        let latest_backup_entries: Vec<_> = backup_entries.into_iter().rev().take(2).collect();
+
         for snapshot in all_snapshots {
             let snapshot_name = PathBuf::from(snapshot.file_name().unwrap());
             let mut retained = true;
 
-            for entry in backup_history.entries.iter() {
-                println!(
-                    "eq: {}",
-                    dbg!(&snapshot_name) == dbg!(&entry.local_snapshot)
-                );
-
+            for entry in latest_backup_entries.iter() {
                 if snapshot.ends_with(&entry.local_snapshot) {
                     retained = true;
+
                     break;
                 }
             }
@@ -107,6 +109,7 @@ impl SourceService for BtrfsSourceService {
             if retained {
                 continue;
             }
+            println!("will delete local snapshot '{}'", snapshot_name.display());
             expired_snapshots.push(snapshot);
         }
 

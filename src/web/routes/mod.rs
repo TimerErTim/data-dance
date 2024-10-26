@@ -32,6 +32,10 @@ pub async fn run_server(context: DataDanceContext) -> i32 {
 }
 
 pub async fn start_server(tcp_listener: TcpListener, routes: Router) -> Result<(), ()> {
+    println!(
+        "starting server on {}",
+        tcp_listener.local_addr().map_err(|_| ())?
+    );
     let server_future = axum::serve(tcp_listener, routes)
         .with_graceful_shutdown(async move { tokio::signal::ctrl_c().await.unwrap_or_default() });
     server_future.await.map_err(|err| ())?;
