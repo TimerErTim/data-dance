@@ -6,8 +6,8 @@ pub use incremental_backup::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct JobStates {
-    restore: Option<usize>,
-    backup: Option<BackupJobState>,
+    pub restore: Option<()>,
+    pub backup: Option<BackupJobState>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

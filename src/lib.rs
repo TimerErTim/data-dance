@@ -1,6 +1,16 @@
-pub mod error_template;
+#![feature(path_add_extension)]
+
 mod objects;
 pub mod web;
+
+#[cfg(feature = "ssr")]
+mod config;
+#[cfg(feature = "ssr")]
+mod context;
+#[cfg(feature = "ssr")]
+mod jobs;
+#[cfg(feature = "ssr")]
+mod services;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

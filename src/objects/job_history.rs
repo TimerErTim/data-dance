@@ -3,5 +3,5 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct JobHistory {
-    entries: Vec<JobResult>,
+    pub entries: Vec<JobResult>,
 }

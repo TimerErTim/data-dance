@@ -1,10 +1,11 @@
+mod error_template;
 mod server_fns;
 
-use crate::error_template::{AppError, ErrorTemplate};
 use crate::objects::CompressionLevel;
 use crate::web::app::server_fns::start_incremental_backup;
+use error_template::{AppError, ErrorTemplate};
 use leptos::{component, create_signal, spawn_local, view, Errors, IntoView, SignalUpdate};
-use leptos_meta::{provide_meta_context, Link, Stylesheet, Title};
+use leptos_meta::{provide_meta_context, Link, Title};
 use leptos_router::{Route, Router, Routes};
 
 #[component]

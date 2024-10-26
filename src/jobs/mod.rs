@@ -8,6 +8,8 @@ mod incremental_backup;
 mod restore;
 mod variants;
 
+pub use executor::*;
+
 pub trait Job {
     type CompletionStats: Serialize + DeserializeOwned;
     type RunningStats: Serialize + DeserializeOwned;
