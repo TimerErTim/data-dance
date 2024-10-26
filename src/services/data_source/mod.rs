@@ -1,5 +1,4 @@
 pub mod btrfs;
-#[cfg(test)]
 pub mod fake;
 
 use crate::objects::BackupHistory;

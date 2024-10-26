@@ -4,7 +4,7 @@ use crate::jobs::Job;
 use crate::objects::job_result::{IncrementalBackupResultState, JobResult};
 use crate::objects::job_state::{BackupJobState, JobStates};
 use crate::objects::JobHistory;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::{BufReader, BufWriter};
 use std::ops::{Deref, DerefMut};
@@ -21,6 +21,22 @@ pub struct JobExecutor {
 
 impl JobExecutor {
     pub fn new(config: DataDanceConfiguration) -> Self {
+        let history_file = config
+            .local_storage
+            .jobs_folder
+            .clone()
+            .join("history.json");
+        if !history_file.is_file() {
+            let handle = File::create(history_file).unwrap();
+            serde_json::to_writer(
+                BufWriter::new(handle),
+                &JobHistory {
+                    entries: Vec::new(),
+                },
+            )
+            .unwrap();
+        }
+
         JobExecutor {
             config,
             current_restoration: Arc::new(Mutex::new(None)),

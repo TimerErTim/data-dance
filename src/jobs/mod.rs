@@ -4,11 +4,12 @@ use serde::{Deserialize, Serialize};
 
 mod executor;
 mod full_backup;
-mod incremental_backup;
+pub mod incremental_backup;
 mod restore;
 mod variants;
 
 pub use executor::*;
+pub use variants::*;
 
 pub trait Job {
     type CompletionStats: Serialize + DeserializeOwned;

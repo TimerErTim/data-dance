@@ -1,5 +1,4 @@
 pub mod bare_fs;
-#[cfg(test)]
 pub mod fake;
 
 use crate::objects;
