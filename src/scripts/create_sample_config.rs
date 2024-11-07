@@ -1,4 +1,7 @@
-use crate::config::{DataDanceConfiguration, LocalStorageConfig, RemoteStorageConfig, WebConfig};
+use crate::config::{
+    DataDanceConfiguration, LocalSource, LocalStorageConfig, RemoteDestination,
+    RemoteStorageConfig, WebConfig,
+};
 use crate::objects::CompressionLevel;
 use std::path::PathBuf;
 
@@ -9,13 +12,21 @@ fn make_sample_config() -> DataDanceConfiguration {
             port: 3000,
         },
         local_storage: LocalStorageConfig {
-            snapshots_folder: PathBuf::from("/mnt/mstrg/backups/.snapshots/"),
-            source_folder: PathBuf::from("/mnt/mstrg/export/"),
+            source: LocalSource::Btrfs {
+                snapshots_folder: PathBuf::from("/mnt/mstrg/backups/.snapshots/"),
+                source_folder: PathBuf::from("/mnt/mstrg/export/"),
+                send_compressed_data: true,
+            },
             jobs_folder: PathBuf::from("/mnt/mstrg/backups/"),
         },
         remote_storage: RemoteStorageConfig {
-            dest_folder: "/chaotix/nas/backups/".into(),
-            password: Some("123456".into()),
+            dest: RemoteDestination::Ssh {
+                username: "u428321".to_string(),
+                hostname: "u428321.your-storagebox.de".to_string(),
+                port: Some(23),
+                folder: "/home/chaotix".into(),
+            },
+            encryption: Some("123456".into()),
             compression: CompressionLevel::Best,
         },
     }

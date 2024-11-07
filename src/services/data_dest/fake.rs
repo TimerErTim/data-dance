@@ -11,6 +11,10 @@ pub struct FakeDestService {
 }
 
 impl FakeDestService {
+    pub fn empty() -> Self {
+        Self::new(BackupHistory::default())
+    }
+
     pub fn new(backup_history: BackupHistory) -> Self {
         Self {
             backup_history: Arc::new(Mutex::new(backup_history)),

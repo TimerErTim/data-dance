@@ -1,13 +1,13 @@
 use crate::config::{DataDanceConfiguration, LocalStorageConfig, RemoteStorageConfig, WebConfig};
 use crate::jobs::incremental_backup::IncrementalBackupJob;
 use crate::jobs::Job;
-use crate::objects;
 use crate::objects::job_result::{IncrementalBackupResult, IncrementalBackupResultState};
 use crate::objects::{BackupEntry, BackupHistory, BackupType, CompressionLevel};
 use crate::services::data_dest::fake::FakeDestService;
 use crate::services::data_dest::DestService;
 use crate::services::data_source::fake::FakeSourceService;
 use crate::services::data_source::SourceService;
+use crate::{config, objects};
 use std::cell::RefCell;
 use std::path::PathBuf;
 
@@ -34,13 +34,18 @@ fn run_fake_job(
             host: "0.0.0.0".to_string(),
         },
         local_storage: LocalStorageConfig {
-            snapshots_folder: ".snapshots/".into(),
-            source_folder: "export/".into(),
+            source: config::LocalSource::Btrfs {
+                snapshots_folder: ".snapshots/".into(),
+                source_folder: "export/".into(),
+                send_compressed_data: true,
+            },
             jobs_folder: "./".into(),
         },
         remote_storage: RemoteStorageConfig {
-            dest_folder: "backups/".into(),
-            password: password.map(|pw| pw.into()),
+            dest: config::RemoteDestination::Local {
+                folder: "backups/".into(),
+            },
+            encryption: password.map(|pw| pw.into()),
             compression: compression_level,
         },
     };

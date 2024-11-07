@@ -1,5 +1,6 @@
 pub mod bare_fs;
 pub mod fake;
+pub mod ssh;
 
 use crate::objects;
 use std::io;

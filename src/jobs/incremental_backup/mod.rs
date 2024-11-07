@@ -16,9 +16,6 @@ use std::sync::Mutex;
 
 pub struct IncrementalBackupJob {
     encoding_data_tunnel: EncodingDataTunnel,
-    src_folder: PathBuf,
-    snapshots_folder: PathBuf,
-    dest_folder: PathBuf,
 
     remote_service: Mutex<Box<dyn DestService + Send>>,
     local_service: Mutex<Box<dyn SourceService + Send>>,
@@ -34,14 +31,11 @@ impl IncrementalBackupJob {
     ) -> Self {
         let data_tunnel = EncodingDataTunnel {
             compression_level: config.remote_storage.compression,
-            encryption_level: config.remote_storage.password.clone().into(),
+            encryption_level: config.remote_storage.encryption.clone().into(),
         };
 
         Self {
             encoding_data_tunnel: data_tunnel,
-            src_folder: config.local_storage.source_folder.clone(),
-            snapshots_folder: config.local_storage.snapshots_folder.clone(),
-            dest_folder: config.remote_storage.dest_folder.clone(),
 
             remote_service: Mutex::new(remote_service),
             local_service: Mutex::new(local_service),

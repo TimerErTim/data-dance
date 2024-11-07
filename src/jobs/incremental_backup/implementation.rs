@@ -2,12 +2,17 @@ use crate::config::DataDanceConfiguration;
 use crate::jobs::incremental_backup::state::IncrementalBackupJobState;
 use crate::jobs::incremental_backup::IncrementalBackupJob;
 use crate::jobs::Job;
-use crate::objects;
 use crate::objects::job_result::IncrementalBackupUploadResult;
 use crate::objects::job_state::IncrementalBackupStage;
 use crate::objects::{CompressionLevel, EncryptionLevel};
 use crate::services::data_dest::bare_fs::BareFsDestService;
+use crate::services::data_dest::fake::FakeDestService;
+use crate::services::data_dest::ssh::SshDestService;
+use crate::services::data_dest::DestService;
 use crate::services::data_source::btrfs::BtrfsSourceService;
+use crate::services::data_source::fake::FakeSourceService;
+use crate::services::data_source::SourceService;
+use crate::{config, objects};
 use objects::job_state::IncrementalBackupUploadState;
 use std::ops::{Deref, DerefMut};
 
@@ -16,14 +21,34 @@ impl Job for IncrementalBackupJob {
     type RunningStats = objects::job_state::IncrementalBackupState;
 
     fn from_config(config: DataDanceConfiguration) -> Self {
-        let src_service = BtrfsSourceService::new(
-            config.local_storage.snapshots_folder.clone(),
-            config.local_storage.source_folder.clone(),
-            true,
-        );
-        let dest_service = BareFsDestService::new(config.remote_storage.dest_folder.clone());
+        let src_service = match config.local_storage.source.clone() {
+            config::LocalSource::Btrfs {
+                snapshots_folder,
+                source_folder,
+                send_compressed_data,
+            } => Box::new(BtrfsSourceService::new(
+                snapshots_folder,
+                source_folder,
+                send_compressed_data,
+            )) as Box<dyn SourceService + Send>,
+            config::LocalSource::Fake { backup_byte_size } => Box::new(FakeSourceService::new(
+                "fake_snapshot".into(),
+                backup_byte_size,
+            ))
+                as Box<dyn SourceService + Send>,
+        };
+        let dest_service: Box<dyn DestService + Send> = match config.remote_storage.dest.clone() {
+            config::RemoteDestination::Local { folder } => Box::new(BareFsDestService::new(folder)),
+            config::RemoteDestination::Ssh {
+                hostname,
+                port,
+                username,
+                folder,
+            } => Box::new(SshDestService::new(port, hostname, username, folder)),
+            config::RemoteDestination::Fake => Box::new(FakeDestService::empty()),
+        };
 
-        IncrementalBackupJob::new(config, Box::new(src_service), Box::new(dest_service))
+        IncrementalBackupJob::new(config, src_service, dest_service)
     }
 
     fn run(&self) -> Self::CompletionStats {

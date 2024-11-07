@@ -20,15 +20,40 @@ pub struct WebConfig {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LocalStorageConfig {
-    pub snapshots_folder: PathBuf,
-    pub source_folder: PathBuf,
+    pub source: LocalSource,
     pub jobs_folder: PathBuf,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct RemoteStorageConfig {
-    pub dest_folder: PathBuf,
+pub enum LocalSource {
+    Btrfs {
+        snapshots_folder: PathBuf,
+        source_folder: PathBuf,
+        send_compressed_data: bool,
+    },
+    Fake {
+        backup_byte_size: usize,
+    },
+}
 
-    pub password: Option<SensitiveString>,
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct RemoteStorageConfig {
+    pub dest: RemoteDestination,
+
+    pub encryption: Option<SensitiveString>,
     pub compression: CompressionLevel,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum RemoteDestination {
+    Ssh {
+        username: String,
+        hostname: String,
+        port: Option<u16>,
+        folder: PathBuf,
+    },
+    Local {
+        folder: PathBuf,
+    },
+    Fake,
 }
