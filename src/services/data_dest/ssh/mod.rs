@@ -87,7 +87,7 @@ impl DestService for SshDestService {
                 return if err.is_eof() {
                     Ok(BackupHistory { entries: vec![] })
                 } else {
-                    Err(err).into()
+                    Err(err)?
                 }
             }
             Ok(reader) => reader,
