@@ -80,7 +80,17 @@ impl SshDestService {
 
 impl DestService for SshDestService {
     fn backup_history(&self) -> std::io::Result<BackupHistory> {
-        let reader = self.open_reader("backup_history.json".into())?;
+        let reader = match self.open_reader("backup_history.json".into()) {
+            Err(err) => {
+                return if err.kind() == std::io::ErrorKind::NotFound {
+                    Ok(BackupHistory { entries: vec![] })
+                } else {
+                    Err(err)
+                }
+            }
+            Ok(reader) => reader,
+        };
+
         let history = serde_json::from_reader(reader)?;
         Ok(history)
     }
