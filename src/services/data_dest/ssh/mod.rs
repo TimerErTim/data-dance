@@ -43,7 +43,10 @@ impl SshDestService {
                 "of={}",
                 self.folder.join(&relative_file_path).display()
             ))
-            .stdin(Stdio::piped());
+            .arg("conv=fsync")
+            .arg("bs=4M")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null());
 
         let mut process = command.spawn()?;
         let input = process.stdin.take().unwrap();
@@ -64,7 +67,9 @@ impl SshDestService {
                 "if={}",
                 self.folder.join(&relative_file_path).display()
             ))
-            .stdout(Stdio::piped());
+            .arg("bs=4M")
+            .stdout(Stdio::piped())
+            .stdin(Stdio::null());
 
         let mut process = command.spawn()?;
         let output = process.stdout.take().unwrap();
