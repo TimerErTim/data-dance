@@ -1,4 +1,5 @@
 #![feature(path_add_extension)]
+#![feature(result_flattening)]
 
 use std::process::exit;
 
