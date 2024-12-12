@@ -103,8 +103,9 @@ impl IncrementalBackupJob {
         })?;
 
         let now = chrono::Utc::now();
+        let new_backup_id = now.timestamp() as u32;
         let new_backup_entry = BackupEntry {
-            id: now.timestamp() as u32,
+            id: new_backup_id,
             parent: backup_src.parent_backup_id,
             timestamp: now.timestamp_millis() as u64,
             remote_filename: dest_filename,
@@ -156,7 +157,10 @@ impl IncrementalBackupJob {
             IncrementalBackupJobState::Uploading {
                 uploading_state, ..
             } => Ok(IncrementalBackupUploadResult {
-                parent: uploading_state.parent_backup_id,
+                id: convert_id_to_incremental_backup_job_id(new_backup_id),
+                parent: uploading_state
+                    .parent_backup_id
+                    .map(convert_id_to_incremental_backup_job_id),
                 remote_filename: uploading_state
                     .remote_path_relative
                     .to_string_lossy()

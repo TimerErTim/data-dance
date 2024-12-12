@@ -16,6 +16,7 @@ pub enum IncrementalBackupResultState {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct IncrementalBackupUploadResult {
+    pub id: u32,
     pub parent: Option<u32>,
     pub remote_filename: String,
     pub local_snapshot: String,
