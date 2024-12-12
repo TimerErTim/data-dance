@@ -136,6 +136,20 @@ impl IncrementalBackupJob {
                 })?
         };
 
+        {
+            let remote_service_lock = self.remote_service.lock().unwrap();
+            remote_service_lock
+                .clear_orphaned_backups()
+                .map_err(|err| IncrementalBackupRunError::IoError {
+                    stage: IncrementalBackupRunStage::ClearingOrphanedBackups,
+                    source: err,
+                })?
+        };
+
+        fn convert_id_to_incremental_backup_job_id(id: u32) -> u32 {
+            id.wrapping_mul(10) / 10 * 10 + 1
+        }
+
         let state_lock = self.state.lock().unwrap();
         let state = state_lock.deref();
         match state {
@@ -185,4 +199,5 @@ pub enum IncrementalBackupRunStage {
     Uploading,
     StoringMetadata,
     ClearingSnapshots,
+    ClearingOrphanedBackups,
 }

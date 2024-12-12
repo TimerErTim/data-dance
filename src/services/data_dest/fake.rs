@@ -45,6 +45,11 @@ impl DestService for FakeDestService {
         *history_lock = history;
         Ok(())
     }
+
+    fn clear_orphaned_backups(&self) -> std::io::Result<usize> {
+        let _history = self.backup_history()?;
+        Ok(0)
+    }
 }
 
 pub struct FakeDestServiceDebugData {

@@ -47,4 +47,42 @@ impl DestService for BareFsDestService {
         serde_json::to_writer(BufWriter::new(handle), &history)?;
         Ok(())
     }
+
+    fn clear_orphaned_backups(&self) -> std::io::Result<usize> {
+        let history = self.backup_history()?;
+        let mut all_backup_file_names = vec![];
+        let mut deleted_counter = 0;
+
+        for entry in self.dest_folder.read_dir()? {
+            let Ok(entry) = entry else {
+                continue;
+            };
+            let file_path = entry.path();
+            let Some(file_name) = file_path.file_name() else {
+                continue;
+            };
+            let Some(file_extension) = file_path.extension() else {
+                continue;
+            };
+            if file_path.is_file() && file_extension == "bin" || file_extension == "dbin" {
+                all_backup_file_names.push(file_name.to_os_string());
+            }
+        }
+
+        for file_name in all_backup_file_names {
+            if history
+                .entries
+                .iter()
+                .find(|entry| entry.remote_filename == PathBuf::from(file_name.clone()))
+                .is_none()
+            {
+                let file_path = self.dest_folder.join(file_name);
+                if std::fs::remove_file(file_path).is_ok() {
+                    deleted_counter += 1;
+                }
+            }
+        }
+
+        Ok(deleted_counter)
+    }
 }
