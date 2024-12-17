@@ -155,7 +155,7 @@ impl DestService for SshDestService {
         let writer = self.open_writer("backup_history.json".into())?;
         serde_json::to_writer(writer, &history)?;
         // Ensure written
-        std::thread::sleep(Duration::from_secs(10));
+        std::thread::sleep(Duration::from_secs(5));
         Ok(())
     }
 
@@ -172,22 +172,6 @@ impl DestService for SshDestService {
                 all_backup_file_names.push(entry);
             }
         }
-
-        println!(
-            "All backups registered in history: {:#?}",
-            history
-                .entries
-                .iter()
-                .map(|entry| entry.remote_filename.display())
-                .collect::<Vec<_>>()
-        );
-        println!(
-            "All remote backup file names: {:#?}",
-            all_backup_file_names
-                .iter()
-                .map(|path| path.display())
-                .collect::<Vec<_>>()
-        );
 
         for file_name in all_backup_file_names {
             if history
