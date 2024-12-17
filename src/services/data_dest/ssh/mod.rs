@@ -154,14 +154,11 @@ impl DestService for SshDestService {
     fn set_backup_history(&self, history: BackupHistory) -> std::io::Result<()> {
         let writer = self.open_writer("backup_history.json".into())?;
         serde_json::to_writer(writer, &history)?;
-        // Ensure written
-        std::thread::sleep(Duration::from_secs(5));
         Ok(())
     }
 
-    fn clear_orphaned_backups(&self) -> std::io::Result<usize> {
+    fn clear_orphaned_backups(&self, history: &BackupHistory) -> std::io::Result<usize> {
         let mut deleted_counter = 0;
-        let history = self.backup_history()?;
         let mut all_backup_file_names = vec![];
 
         for entry in self.list_files()? {

@@ -140,7 +140,7 @@ impl IncrementalBackupJob {
         {
             let remote_service_lock = self.remote_service.lock().unwrap();
             remote_service_lock
-                .clear_orphaned_backups()
+                .clear_orphaned_backups(&history)
                 .map_err(|err| IncrementalBackupRunError::IoError {
                     stage: IncrementalBackupRunStage::ClearingOrphanedBackups,
                     source: err,

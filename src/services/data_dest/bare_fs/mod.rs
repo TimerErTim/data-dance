@@ -48,8 +48,7 @@ impl DestService for BareFsDestService {
         Ok(())
     }
 
-    fn clear_orphaned_backups(&self) -> std::io::Result<usize> {
-        let history = self.backup_history()?;
+    fn clear_orphaned_backups(&self, history: &BackupHistory) -> std::io::Result<usize> {
         let mut all_backup_file_names = vec![];
         let mut deleted_counter = 0;
 

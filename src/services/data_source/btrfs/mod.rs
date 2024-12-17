@@ -92,7 +92,7 @@ impl SourceService for BtrfsSourceService {
         let mut backup_entries = backup_history.entries.clone();
         backup_entries.sort_by_key(|entry| entry.timestamp);
         backup_entries.reverse();
-        let latest_backup_entries: Vec<_> = backup_entries.into_iter().rev().take(2).collect();
+        let latest_backup_entries: Vec<_> = backup_entries.into_iter().take(2).collect();
 
         for snapshot in all_snapshots {
             let mut retained = false;

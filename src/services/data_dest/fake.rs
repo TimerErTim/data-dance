@@ -5,6 +5,7 @@ use std::io::{Sink, Write};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use web_sys::History;
 
 pub struct FakeDestService {
     backup_history: Arc<Mutex<BackupHistory>>,
@@ -46,8 +47,7 @@ impl DestService for FakeDestService {
         Ok(())
     }
 
-    fn clear_orphaned_backups(&self) -> std::io::Result<usize> {
-        let _history = self.backup_history()?;
+    fn clear_orphaned_backups(&self, history: &BackupHistory) -> std::io::Result<usize> {
         Ok(0)
     }
 }

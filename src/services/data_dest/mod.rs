@@ -13,5 +13,5 @@ pub trait DestService {
     fn get_backup_writer(&self, relative_file_path: PathBuf) -> io::Result<Box<dyn Write>>;
     fn set_backup_history(&self, history: objects::BackupHistory) -> io::Result<()>;
 
-    fn clear_orphaned_backups(&self) -> io::Result<usize>;
+    fn clear_orphaned_backups(&self, history: &objects::BackupHistory) -> io::Result<usize>;
 }
