@@ -3,8 +3,11 @@ mod server_fns;
 
 use crate::objects::CompressionLevel;
 use crate::web::app::server_fns::start_incremental_backup;
+use chrono::LocalResult;
 use error_template::{AppError, ErrorTemplate};
-use leptos::{component, create_signal, spawn_local, view, Errors, IntoView, SignalUpdate};
+use leptos::logging::*;
+use leptos::prelude::*;
+use leptos::*;
 use leptos_meta::{provide_meta_context, Link, Title};
 use leptos_router::{Route, Router, Routes};
 
@@ -12,6 +15,15 @@ use leptos_router::{Route, Router, Routes};
 pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
+
+    let async_data = create_resource(
+        || (),
+        move |_| async move { server_fns::job_status().await },
+    );
+
+    create_effect(move |_| {
+        log!("Job states: {:?}", async_data.get());
+    });
 
     view! {
 
@@ -39,6 +51,7 @@ pub fn App() -> impl IntoView {
             .into_view()
         }>
             <main>
+                <button on:click=move |_| async_data.refetch()>Reload jobs</button>
                 <Routes>
                     <Route path="" view=HomePage/>
                 </Routes>
