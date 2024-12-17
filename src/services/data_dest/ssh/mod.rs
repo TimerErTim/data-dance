@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::PathBuf;
 use std::process::{Child, ChildStdin, ChildStdout, Stdio};
+use std::time::Duration;
 
 pub struct SshDestService {
     port: Option<u16>,
@@ -153,6 +154,8 @@ impl DestService for SshDestService {
     fn set_backup_history(&self, history: BackupHistory) -> std::io::Result<()> {
         let writer = self.open_writer("backup_history.json".into())?;
         serde_json::to_writer(writer, &history)?;
+        // Ensure written
+        std::thread::sleep(Duration::from_secs(10));
         Ok(())
     }
 
@@ -169,6 +172,22 @@ impl DestService for SshDestService {
                 all_backup_file_names.push(entry);
             }
         }
+
+        println!(
+            "All backups registered in history: {:#?}",
+            history
+                .entries
+                .iter()
+                .map(|entry| entry.remote_filename.display())
+                .collect::<Vec<_>>()
+        );
+        println!(
+            "All remote backup file names: {:#?}",
+            all_backup_file_names
+                .iter()
+                .map(|path| path.display())
+                .collect::<Vec<_>>()
+        );
 
         for file_name in all_backup_file_names {
             if history
