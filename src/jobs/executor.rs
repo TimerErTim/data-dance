@@ -8,6 +8,7 @@ use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::{BufReader, BufWriter};
 use std::ops::{Deref, DerefMut};
+use std::path::PathBuf;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use thiserror::Error;
@@ -77,25 +78,25 @@ impl JobExecutor {
         let restoration = Arc::clone(&self.current_restoration);
         let backup = Arc::clone(&self.current_backup);
 
-        let history_path = self
-            .config
-            .local_storage
-            .jobs_folder
-            .clone()
-            .join("history.json");
+        let history_path = self.history_path();
 
-        std::thread::spawn(move || -> io::Result<()> {
+        std::thread::spawn(move || {
             let result = job.run();
 
             // Push the result to history
-            let mut history: JobHistory = {
-                let handle = File::open(history_path.clone())?;
-                serde_json::from_reader(BufReader::new(handle))?
+            let persist_history_result: io::Result<()> = try {
+                let mut history: JobHistory = {
+                    let handle = File::open(history_path.clone())?;
+                    serde_json::from_reader(BufReader::new(handle))?
+                };
+                history.entries.push(result);
+                {
+                    let handle = File::create(history_path.clone())?;
+                    serde_json::to_writer(BufWriter::new(handle), &history)?;
+                }
             };
-            history.entries.push(result);
-            {
-                let handle = File::create(history_path.clone())?;
-                serde_json::to_writer(BufWriter::new(handle), &history)?;
+            if let Err(err) = persist_history_result {
+                eprintln!("Failed to persist job history: {:#?}", err);
             }
 
             // Clear current job
@@ -109,7 +110,6 @@ impl JobExecutor {
                     restoration_guard.deref_mut().take();
                 }
             };
-            Ok(())
         });
     }
 
@@ -132,14 +132,17 @@ impl JobExecutor {
     }
 
     pub fn history(&self) -> io::Result<JobHistory> {
-        let file = self
-            .config
+        let file = self.history_path();
+        let handle = File::open(file)?;
+        Ok(serde_json::from_reader(BufReader::new(handle))?)
+    }
+
+    fn history_path(&self) -> PathBuf {
+        self.config
             .local_storage
             .jobs_folder
             .clone()
-            .join("history.json");
-        let handle = File::open(file)?;
-        Ok(serde_json::from_reader(BufReader::new(handle))?)
+            .join("history.json")
     }
 }
 

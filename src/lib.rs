@@ -1,5 +1,7 @@
 #![feature(path_add_extension)]
 #![feature(result_flattening)]
+#![feature(try_blocks)]
+#![allow(warnings)]
 
 mod objects;
 pub mod web;
