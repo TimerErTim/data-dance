@@ -88,6 +88,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "async_cell"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "834eee9ce518130a3b4d5af09ecc43e9d6b57ee76613f227a1ddd6b77c7a62bc"
+
+[[package]]
 name = "attribute-derive"
 version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -487,9 +493,12 @@ dependencies = [
  "console_error_panic_hook",
  "cryptostream",
  "http 1.1.0",
+ "humansize",
  "leptos",
+ "leptos-remix-icon",
  "leptos_axum",
  "leptos_meta",
+ "leptos_query",
  "leptos_router",
  "openssl",
  "rand",
@@ -503,8 +512,6 @@ dependencies = [
  "tower-http",
  "tracing",
  "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
  "zstd",
 ]
 
@@ -748,6 +755,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "gloo-timers"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbb143cf96099802033e0d4f4963b19fd2e0b728bcf076cd9cf7f6634f092994"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "js-sys",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "gloo-utils"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -863,6 +882,15 @@ name = "httpdate"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
+
+[[package]]
+name = "humansize"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cb51c9a029ddc91b07a787f1d86b53ccfa49b0e86688c946ebe8d3555685dd7"
+dependencies = [
+ "libm",
+]
 
 [[package]]
 name = "hyper"
@@ -1030,6 +1058,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "leptos-remix-icon"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c18d6b30282f9e0dcfd95e061b6677bdf916cc831745c352a19b2e825c833e8"
+dependencies = [
+ "leptos",
+ "serde",
+]
+
+[[package]]
 name = "leptos_axum"
 version = "0.6.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1166,6 +1204,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "leptos_query"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "210f99102170bc3d227148d78c2fdd79e89f724981a697c526f294c85a0b0521"
+dependencies = [
+ "async-trait",
+ "async_cell",
+ "cfg-if",
+ "futures",
+ "futures-channel",
+ "gloo-timers",
+ "js-sys",
+ "leptos",
+ "slotmap",
+ "tokio",
+ "web-sys",
+]
+
+[[package]]
 name = "leptos_reactive"
 version = "0.6.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1246,6 +1303,12 @@ name = "libc"
 version = "0.2.158"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8adc4bb1803a324070e64a98ae98f38934d91957a99cfb3a43dcbc01bc56439"
+
+[[package]]
+name = "libm"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8355be11b20d696c8f18f6cc018c4e372165b1fa8126cef092399c9951984ffa"
 
 [[package]]
 name = "linear-map"

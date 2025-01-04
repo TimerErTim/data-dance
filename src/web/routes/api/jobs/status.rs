@@ -12,7 +12,7 @@ pub fn job_status_router(context: &Arc<DataDanceContext>) -> Router<Arc<DataDanc
     Router::new().route("/", get(handle_job_status))
 }
 
-async fn handle_job_status(
+pub async fn handle_job_status(
     State(context): State<Arc<DataDanceContext>>,
 ) -> Result<Json<JobStates>, Response> {
     Ok(Json(context.executor.active_jobs()))

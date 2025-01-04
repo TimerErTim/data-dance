@@ -11,7 +11,7 @@ pub fn job_history_router(context: &Arc<DataDanceContext>) -> Router<Arc<DataDan
     Router::new().route("/", get(handle_job_history))
 }
 
-async fn handle_job_history(
+pub async fn handle_job_history(
     State(context): State<Arc<DataDanceContext>>,
 ) -> Result<Json<JobHistory>, Response> {
     Ok(Json(context.executor.history().map_err(|err| {

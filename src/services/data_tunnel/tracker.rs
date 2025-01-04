@@ -29,11 +29,11 @@ impl<DT: DataTunnel, R: Read + 'static, W: Write + 'static> TrackedTransfer<DT, 
         }
     }
 
-    pub fn reader_bytes_count(&self) -> usize {
+    pub fn reader_bytes_count(&self) -> u64 {
         self.reader_bytes_count.value()
     }
 
-    pub fn writer_bytes_count(&self) -> usize {
+    pub fn writer_bytes_count(&self) -> u64 {
         self.writer_bytes_count.value()
     }
 
@@ -90,7 +90,7 @@ mod tests {
         transfer.run();
         let output: Vec<u8> = rx.iter().collect();
 
-        assert_eq!(transfer.reader_bytes_count(), input.len());
-        assert_eq!(transfer.writer_bytes_count(), output.len());
+        assert_eq!(transfer.reader_bytes_count(), input.len() as u64);
+        assert_eq!(transfer.writer_bytes_count(), output.len() as u64);
     }
 }

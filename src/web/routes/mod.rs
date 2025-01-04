@@ -1,4 +1,4 @@
-mod api;
+pub mod api;
 pub mod fileserv;
 mod ui;
 
@@ -51,8 +51,8 @@ pub async fn try_build_routes(context: Arc<DataDanceContext>) -> Result<Router, 
 
     leptos_options.site_addr = context.bound_socket_addr();
 
-    let ui_router = ui_router(leptos_options);
-    let api_router = api_router(&context).with_state(context);
+    let ui_router = ui_router(leptos_options, &context);
+    let api_router = api_router(&context);
 
     let routes = Router::new().merge(ui_router).nest("/api", api_router);
     Ok(routes)

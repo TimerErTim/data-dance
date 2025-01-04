@@ -20,8 +20,8 @@ pub struct IncrementalBackupUploadResult {
     pub parent: Option<u32>,
     pub remote_filename: String,
     pub local_snapshot: String,
-    pub bytes_read: usize,
-    pub bytes_written: usize,
+    pub bytes_read: u64,
+    pub bytes_written: u64,
     pub compression_level: CompressionLevel,
     pub encrypted: bool,
 }

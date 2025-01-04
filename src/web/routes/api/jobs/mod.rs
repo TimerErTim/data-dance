@@ -1,6 +1,6 @@
-mod history;
-mod incremental_backup;
-mod status;
+pub mod history;
+pub mod incremental_backup;
+pub mod status;
 
 use crate::context::DataDanceContext;
 use crate::web::routes::api::jobs::history::job_history_router;

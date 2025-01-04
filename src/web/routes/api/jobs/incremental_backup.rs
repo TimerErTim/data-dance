@@ -17,7 +17,7 @@ pub fn incremental_backup_router(context: &Arc<DataDanceContext>) -> Router<Arc<
     Router::new().route("/", post(handle_incremental_backup))
 }
 
-async fn handle_incremental_backup(
+pub async fn handle_incremental_backup(
     State(context): State<Arc<DataDanceContext>>,
 ) -> Result<Response, Response> {
     let config = match read_config_from_env() {

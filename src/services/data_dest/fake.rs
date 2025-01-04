@@ -5,7 +5,6 @@ use std::io::{Sink, Write};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use web_sys::History;
 
 pub struct FakeDestService {
     backup_history: Arc<Mutex<BackupHistory>>,
