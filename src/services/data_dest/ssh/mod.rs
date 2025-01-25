@@ -1,11 +1,13 @@
 use crate::objects::{BackupHistory, SensitiveString};
 use crate::services::data_dest::DestService;
 use crate::services::data_source::btrfs::BtrfsSourceService;
+use crate::services::processes::AwaitedChild;
 use std::cell::RefCell;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::PathBuf;
 use std::process::{Child, ChildStdin, ChildStdout, Stdio};
+use std::thread;
 use std::time::Duration;
 
 pub struct SshDestService {
@@ -13,9 +15,6 @@ pub struct SshDestService {
     host: String,
     username: String,
     folder: PathBuf,
-
-    write_processes: RefCell<Vec<Child>>,
-    read_processes: RefCell<Vec<Child>>,
 }
 
 impl SshDestService {
@@ -25,13 +24,13 @@ impl SshDestService {
             host,
             username,
             folder,
-
-            write_processes: RefCell::new(vec![]),
-            read_processes: RefCell::new(vec![]),
         }
     }
 
-    pub fn open_writer(&self, relative_file_path: PathBuf) -> std::io::Result<ChildStdin> {
+    pub fn open_writer(
+        &self,
+        relative_file_path: PathBuf,
+    ) -> std::io::Result<(ChildStdin, AwaitedChild)> {
         let mut command = std::process::Command::new("ssh");
         if let Some(port) = self.port {
             command.args(["-p", &port.to_string()]);
@@ -51,11 +50,13 @@ impl SshDestService {
 
         let mut process = command.spawn()?;
         let input = process.stdin.take().unwrap();
-        self.write_processes.borrow_mut().push(process);
-        Ok(input)
+        Ok((input, process.into()))
     }
 
-    pub fn open_reader(&self, relative_file_path: PathBuf) -> std::io::Result<ChildStdout> {
+    pub fn open_reader(
+        &self,
+        relative_file_path: PathBuf,
+    ) -> std::io::Result<(ChildStdout, AwaitedChild)> {
         let mut command = std::process::Command::new("ssh");
         if let Some(port) = self.port {
             command.args(["-p", &port.to_string()]);
@@ -74,8 +75,7 @@ impl SshDestService {
 
         let mut process = command.spawn()?;
         let output = process.stdout.take().unwrap();
-        self.read_processes.borrow_mut().push(process);
-        Ok(output)
+        Ok((output, process.into()))
     }
 
     pub fn remove_file(&self, relative_file_path: PathBuf) -> std::io::Result<()> {
@@ -106,6 +106,32 @@ impl SshDestService {
             .flatten()
     }
 
+    pub fn move_file(&self, relative_from: PathBuf, relative_to: PathBuf) -> std::io::Result<()> {
+        let mut command = std::process::Command::new("ssh");
+        if let Some(port) = self.port {
+            command.args(["-p", &port.to_string()]);
+        }
+        command
+            .args(["-o", "Compression no"])
+            .arg(format!("{}@{}", self.username, self.host))
+            .arg("mv -f")
+            .arg(format!("{}", self.folder.join(&relative_from).display()))
+            .arg(format!("{}", self.folder.join(&relative_to).display()))
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .stdin(Stdio::null());
+        command
+            .status()
+            .map(|status| {
+                if status.success() {
+                    Ok(())
+                } else {
+                    Err(std::io::Error::from(std::io::ErrorKind::Other))
+                }
+            })
+            .flatten()
+    }
+
     pub fn list_files(&self) -> std::io::Result<Vec<PathBuf>> {
         let mut command = std::process::Command::new("ssh");
         if let Some(port) = self.port {
@@ -119,8 +145,8 @@ impl SshDestService {
             .stdout(Stdio::piped())
             .stdin(Stdio::null());
         let mut process = command.spawn()?;
-        let output = process.stdout.take().unwrap();
-        let reader = BufReader::new(output);
+        let output = process.wait_with_output()?;
+        let reader = BufReader::new(output.stdout.as_slice());
         let mut files = vec![];
         for line in reader.lines() {
             files.push(line?.into());
@@ -129,9 +155,12 @@ impl SshDestService {
     }
 }
 
-impl DestService for SshDestService {
-    fn backup_history(&self) -> std::io::Result<BackupHistory> {
-        let reader = self.open_reader("backup_history.json".into())?;
+impl SshDestService {
+    fn read_history_at(
+        &self,
+        relative_file_path: impl Into<PathBuf>,
+    ) -> std::io::Result<BackupHistory> {
+        let (reader, _) = self.open_reader(relative_file_path.into())?;
 
         let history = match serde_json::from_reader(reader) {
             Err(err) => {
@@ -145,16 +174,45 @@ impl DestService for SshDestService {
         };
         Ok(history)
     }
+}
+
+impl DestService for SshDestService {
+    fn backup_history(&self) -> std::io::Result<BackupHistory> {
+        self.read_history_at("backup_history.json")
+    }
 
     fn get_backup_writer(&self, relative_file_path: PathBuf) -> std::io::Result<Box<dyn Write>> {
-        let writer = self.open_writer(relative_file_path.clone())?;
+        let (writer, _) = self.open_writer(relative_file_path.clone())?;
         Ok(Box::new(writer))
     }
 
     fn set_backup_history(&self, history: BackupHistory) -> std::io::Result<()> {
-        let writer = self.open_writer("backup_history.json".into())?;
-        serde_json::to_writer(writer, &history)?;
-        Ok(())
+        let try_setting_history = || -> std::io::Result<()> {
+            let (writer, write_process) = self.open_writer("bh_new.json".into())?;
+            serde_json::to_writer(writer, &history)?;
+            drop(write_process);
+            thread::sleep(Duration::from_secs(1));
+            let written_history = self.read_history_at("bh_new.json")?;
+            if written_history != history {
+                return Err(std::io::Error::other(
+                    "backup history not written correctly",
+                ));
+            }
+            self.move_file("bh_new.json".into(), "backup_history.json".into())?;
+            Ok(())
+        };
+
+        let mut last_error = std::io::Error::from(std::io::ErrorKind::Other);
+        for i in 0..5 {
+            if let Err(err) = try_setting_history() {
+                eprintln!("Error setting backup history: {err}");
+                last_error = err;
+                thread::sleep(Duration::from_secs(2u64.pow(i)));
+            } else {
+                return Ok(());
+            }
+        }
+        Err(last_error)
     }
 
     fn clear_orphaned_backups(&self, history: &BackupHistory) -> std::io::Result<usize> {
@@ -184,16 +242,5 @@ impl DestService for SshDestService {
         }
 
         Ok(deleted_counter)
-    }
-}
-
-impl Drop for SshDestService {
-    fn drop(&mut self) {
-        for mut child in self.read_processes.take() {
-            let _ = child.kill();
-        }
-        for mut child in self.write_processes.take() {
-            let _ = child.kill();
-        }
     }
 }
