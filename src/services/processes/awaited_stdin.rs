@@ -49,10 +49,6 @@ impl Write for AwaitedStdin {
         self.inner.write_vectored(bufs)
     }
 
-    fn is_write_vectored(&self) -> bool {
-        self.inner.is_write_vectored()
-    }
-
     fn flush(&mut self) -> std::io::Result<()> {
         self.inner.flush()
     }
