@@ -13,7 +13,6 @@ mod scripts;
 mod services;
 mod web;
 
-#[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
     use crate::jobs::JobExecutor;
@@ -28,11 +27,4 @@ async fn main() {
 
     let exit_code = run_server(context).await;
     exit(exit_code);
-}
-
-#[cfg(not(feature = "ssr"))]
-pub fn main() {
-    // no client-side main function
-    // unless we want this to work with e.g., Trunk for a purely client-side app
-    // see lib.rs for hydration function instead
 }

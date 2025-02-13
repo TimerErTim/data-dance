@@ -1,10 +1,8 @@
 pub mod api;
-pub mod fileserv;
 mod ui;
 
 use crate::context::DataDanceContext;
 use crate::web::routes::api::api_router;
-use crate::web::routes::fileserv::file_and_error_handler;
 use crate::web::routes::ui::ui_router;
 use axum::Router;
 use std::str::FromStr;
@@ -43,15 +41,7 @@ pub async fn start_server(tcp_listener: TcpListener, routes: Router) -> Result<(
 }
 
 pub async fn try_build_routes(context: Arc<DataDanceContext>) -> Result<Router, ()> {
-    let mut leptos_options = leptos::get_configuration(None)
-        .await
-        .inspect_err(|err| eprintln!("Error building routes: {err}"))
-        .map_err(|_| ())?
-        .leptos_options;
-
-    leptos_options.site_addr = context.bound_socket_addr();
-
-    let ui_router = ui_router(leptos_options, &context);
+    let ui_router = ui_router(&context);
     let api_router = api_router(&context);
 
     let routes = Router::new().merge(ui_router).nest("/api", api_router);
