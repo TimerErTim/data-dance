@@ -1,17 +1,22 @@
 #![feature(exit_status_error)]
 
 use std::path::Path;
-use std::{env, fs, io, process};
+use std::{fs, io, process};
 
 fn main() {
     build_frontend();
 }
 
 fn build_frontend() {
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let dest_path = Path::new(&out_dir).join("ui/static");
-
     println!("building frontend...");
+
+    process::Command::new("npm")
+        .args(["install"])
+        .current_dir(fs::canonicalize("frontend/").unwrap())
+        .status()
+        .expect("failed to execute process")
+        .exit_ok()
+        .expect("failed to run npm install");
 
     process::Command::new("npm")
         .args(["run", "build"])

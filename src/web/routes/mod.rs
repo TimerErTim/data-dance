@@ -8,6 +8,7 @@ use axum::Router;
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
+use tower_http::cors::{AllowOrigin, CorsLayer};
 
 pub async fn run_server(context: DataDanceContext) -> i32 {
     let context = Arc::new(context);
@@ -44,6 +45,16 @@ pub async fn try_build_routes(context: Arc<DataDanceContext>) -> Result<Router, 
     let ui_router = ui_router(&context);
     let api_router = api_router(&context);
 
-    let routes = Router::new().merge(ui_router).nest("/api", api_router);
+    let routes = Router::new()
+        .merge(ui_router)
+        .nest("/api", api_router)
+        .route_layer(
+            CorsLayer::permissive().allow_origin(AllowOrigin::predicate(|origin, _| {
+                origin
+                    .to_str()
+                    .map(|val| val.contains("://localhost"))
+                    .unwrap_or(false)
+            })),
+        );
     Ok(routes)
 }

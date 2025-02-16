@@ -1,19 +1,12 @@
-import Image from "next/image";
-import {Button, Card, CardBody, CardHeader, Divider} from "@heroui/react";
+import {Card, CardHeader, Divider} from "@heroui/react";
+import CurrentBackupCard from "@/lib/components/backups/CurrentBackupCard";
 
 export default function Home() {
     return (
         <div className="p-2 md:p-4 lg:p-6 h-full">
             <main className="flex flex-row gap-2 md:gap-4 lg:gap-6 h-full">
                 <div className="w-full h-full flex flex-col">
-                    <Card className="w-full">
-                        <CardHeader>
-                            <h1>Backups</h1>
-                        </CardHeader>
-                        <CardBody>
-                            <Button>Backup</Button>
-                        </CardBody>
-                    </Card>
+                    <CurrentBackupCard/>
 
                     <div className="bg-red-500 grow">
 
