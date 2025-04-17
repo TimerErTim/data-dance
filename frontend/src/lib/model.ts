@@ -1,4 +1,5 @@
 import {CompressionLevel} from "@/lib/queries/spec";
+import {REnum} from "@/lib/types";
 
 export type CurrentBackupJob = {
     startedAt: Date
@@ -25,3 +26,35 @@ export type CurrentIncrementalBackupUploading = {
     encrypted: boolean,
     finishing: boolean,
 }
+
+export type HistoryBackupJob = {
+    startedAt: Date,
+    finishedAt: Date,
+    result: REnum<{
+        Error: string,
+        Success: {
+            id: number,
+            parent: number | null,
+            remoteFilename: string,
+            localSnapshot: string,
+            bytesRead: number,
+            bytesWritten: number,
+            compressionLevel: CompressionLevel,
+            encrypted: boolean
+        }
+    }>
+}
+
+type Result = REnum<{
+    Error: string,
+    Success: {
+        id: number,
+        parent: number | null,
+        remoteFilename: string,
+        localSnapshot: string,
+        bytesRead: number,
+        bytesWritten: number,
+        compressionLevel: CompressionLevel,
+        encrypted: boolean
+    }
+}>

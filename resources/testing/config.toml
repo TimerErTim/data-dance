@@ -6,7 +6,7 @@ host = "127.0.0.1"
 jobs_folder = "./resources/"
 
 [local_storage.source.Fake]
-backup_byte_size = 1_024_000_000
+backup_byte_size = 10_024_000_000
 
 [remote_storage]
 encryption = "123456"

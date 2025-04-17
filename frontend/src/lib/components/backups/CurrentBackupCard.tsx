@@ -21,7 +21,7 @@ export default function CurrentBackupCard() {
 
     const isStartButtonDisabled = !!currentBackupJob.data || startButtonDisabled
     return (
-        <Card fullWidth>
+        <Card fullWidth className="shrink-0 h-fit min-h-fit">
             <CardHeader className="flex flex-row items-center justify-between p-2">
                 <div className="flex flex-row gap-4 text-gray-800 items-center">
                     <h1 className="font-medium text-lg">Backups</h1>
