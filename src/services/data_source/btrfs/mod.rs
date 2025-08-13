@@ -1,5 +1,6 @@
 use crate::objects::BackupHistory;
 use crate::services::data_source::{SourceBackup, SourceService};
+use crate::services::processes::AwaitedStdin;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io;
@@ -129,8 +130,44 @@ impl SourceService for BtrfsSourceService {
         Ok(())
     }
 
-    fn get_restore_writer(&self, restored_folder: PathBuf) -> io::Result<Box<dyn Write>> {
-        todo!()
+    fn get_restore_writer(&self, _restored_snapshot: PathBuf) -> io::Result<Box<dyn Write>> {
+            // restored_snapshot is expected to be the subvolume name to create
+            let mut receive_command = std::process::Command::new("btrfs");
+            receive_command
+                .args(["receive"]) // will create subvolumes inside snapshot folder
+                .arg(&self.snapshot_folder)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::null());
+            let mut process = receive_command.spawn()?;
+            let stdin = process.stdin.take().unwrap();
+            Ok(Box::new(AwaitedStdin::from((stdin, process))) as Box<dyn Write>)
+    }
+
+    fn apply_restored_snapshot(&self, previous_snapshot: Option<PathBuf>, new_snapshot: PathBuf) -> io::Result<()> {
+        if let Some(prev) = previous_snapshot {
+            // remove previous snapshot once new one is received/applied
+            let _ = self.remove_snapshot(prev);
+        }
+        Ok(())
+    }
+}
+
+impl BtrfsSourceService {
+    fn remove_snapshot(&self, snapshot_relative: PathBuf) -> io::Result<()> {
+        let full_path = self.snapshot_folder.join(&snapshot_relative);
+        let mut remove_subv_command = std::process::Command::new("btrfs");
+        remove_subv_command
+            .args(["subvolume", "delete", "-c"])
+            .arg(&full_path);
+        let status = remove_subv_command.status()?;
+        if !status.success() {
+            eprintln!(
+                "Failed to remove subvolume '{}' with btrfs subvolume delete status: {}",
+                full_path.display(),
+                status
+            );
+        }
+        Ok(())
     }
 }
 

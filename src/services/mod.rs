@@ -1,4 +1,4 @@
-mod channels;
+pub mod channels;
 pub mod compression;
 pub mod data_dest;
 pub mod data_source;

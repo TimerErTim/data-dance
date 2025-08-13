@@ -19,8 +19,9 @@ use std::ops::{Deref, DerefMut};
 impl Job for IncrementalBackupJob {
     type CompletionStats = objects::job_result::IncrementalBackupResult;
     type RunningStats = objects::job_state::IncrementalBackupState;
+    type Params = ();
 
-    fn from_config(config: DataDanceConfiguration) -> Self {
+    fn from_config(config: DataDanceConfiguration, _: Self::Params) -> Self {
         let src_service = match config.local_storage.source.clone() {
             config::LocalSource::Btrfs {
                 snapshots_folder,

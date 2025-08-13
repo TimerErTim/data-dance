@@ -1,10 +1,10 @@
 use crate::objects::{BackupHistory, SensitiveString};
 use crate::services::data_dest::DestService;
 use crate::services::data_source::btrfs::BtrfsSourceService;
-use crate::services::processes::{AwaitedChild, AwaitedStdin};
+use crate::services::processes::{AwaitedChild, AwaitedStdin, AwaitedStdout};
 use std::cell::RefCell;
 use std::fs::File;
-use std::io::{BufRead, BufReader, BufWriter, Write};
+use std::io::{BufRead, BufReader, BufWriter, Read, Write};
 use std::path::PathBuf;
 use std::process::{Child, ChildStdin, ChildStdout, Stdio};
 use std::thread;
@@ -184,6 +184,11 @@ impl DestService for SshDestService {
     fn get_backup_writer(&self, relative_file_path: PathBuf) -> std::io::Result<Box<dyn Write>> {
         let (writer, process) = self.open_writer(relative_file_path.clone())?;
         Ok(Box::new(AwaitedStdin::new(writer, process)))
+    }
+
+    fn get_backup_reader(&self, relative_file_path: PathBuf) -> std::io::Result<Box<dyn Read>> {
+        let (reader, process) = self.open_reader(relative_file_path.clone())?;
+        Ok(Box::new(AwaitedStdout::new(reader, process)))
     }
 
     fn set_backup_history(&self, history: BackupHistory) -> std::io::Result<()> {

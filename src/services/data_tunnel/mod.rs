@@ -1,5 +1,5 @@
 mod decoding;
-mod encoding;
+pub mod encoding;
 mod mapped;
 mod pass_through;
 mod tracker;

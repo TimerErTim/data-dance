@@ -147,9 +147,7 @@ impl IncrementalBackupJob {
                 })?
         };
 
-        fn convert_id_to_incremental_backup_job_id(id: u32) -> u32 {
-            id.wrapping_mul(10) / 10 * 10 + 1
-        }
+        fn convert_id_to_incremental_backup_job_id(id: u32) -> u32 { id }
 
         let state_lock = self.state.lock().unwrap();
         let state = state_lock.deref();

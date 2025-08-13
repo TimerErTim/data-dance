@@ -1,7 +1,7 @@
 use crate::objects::BackupHistory;
 use crate::services::data_dest::DestService;
 use std::fs::File;
-use std::io::{BufReader, BufWriter, Write};
+use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::PathBuf;
 
 pub struct BareFsDestService {
@@ -39,6 +39,12 @@ impl DestService for BareFsDestService {
         }
         let handle = File::create(file)?;
         Ok(Box::new(BufWriter::new(handle)))
+    }
+
+    fn get_backup_reader(&self, relative_file_path: PathBuf) -> std::io::Result<Box<dyn Read>> {
+        let file = self.dest_folder.join(relative_file_path);
+        let handle = File::open(file)?;
+        Ok(Box::new(BufReader::new(handle)))
     }
 
     fn set_backup_history(&self, history: BackupHistory) -> std::io::Result<()> {

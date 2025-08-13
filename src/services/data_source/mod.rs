@@ -11,7 +11,16 @@ pub trait SourceService {
 
     fn clear_local_snapshots(&self, backup_history: &BackupHistory) -> io::Result<()>;
 
-    fn get_restore_writer(&self, restored_folder: PathBuf) -> io::Result<Box<dyn Write>>;
+    fn get_restore_writer(&self, restored_snapshot: PathBuf) -> io::Result<Box<dyn Write>>;
+
+    fn apply_restored_snapshot(
+        &self,
+        previous_snapshot: Option<PathBuf>,
+        new_snapshot: PathBuf,
+    ) -> io::Result<()> {
+        let _ = (previous_snapshot, new_snapshot); // default no-op
+        Ok(())
+    }
 }
 
 pub struct SourceBackup {

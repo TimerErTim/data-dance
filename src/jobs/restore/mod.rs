@@ -1,8 +1,7 @@
 use crate::config::DataDanceConfiguration;
-use crate::jobs::incremental_backup::IncrementalBackupJob;
 use crate::jobs::restore::state::RestoreBackupState;
 use crate::jobs::Job;
-use crate::objects::job_state::{IncrementalBackupStage, IncrementalBackupUploadState};
+use crate::objects::job_result::{RestoreResult, RestoreResultState, IncrementalBackupUploadResult};
 use crate::objects::EncryptionLevel;
 use crate::services::data_dest::bare_fs::BareFsDestService;
 use crate::services::data_dest::fake::FakeDestService;
@@ -11,11 +10,15 @@ use crate::services::data_dest::DestService;
 use crate::services::data_source::btrfs::BtrfsSourceService;
 use crate::services::data_source::fake::FakeSourceService;
 use crate::services::data_source::SourceService;
-use crate::services::data_tunnel::{DecodingDataTunnel, EncodingDataTunnel};
+use crate::services::data_tunnel::{DataTunnel, DecodingDataTunnel};
 use crate::{config, objects};
+use std::io::Read;
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 mod state;
+#[cfg(test)]
+mod tests;
 
 pub struct RestoreBackupJob {
     decoding_data_tunnel: DecodingDataTunnel,
@@ -24,13 +27,18 @@ pub struct RestoreBackupJob {
     local_service: Mutex<Box<dyn SourceService + Send>>,
 
     state: Mutex<RestoreBackupState>,
+
+    jobs_folder: PathBuf,
+
+    target_backup_id: Option<u32>,
 }
 
-/*impl Job for IncrementalBackupJob {
-    type CompletionStats = ();
+impl Job for RestoreBackupJob {
+    type CompletionStats = RestoreResult;
     type RunningStats = RestoreBackupState;
+    type Params = RestoreParams;
 
-    fn from_config(config: DataDanceConfiguration) -> Self {
+    fn from_config(config: DataDanceConfiguration, ) -> Self {
         let src_service = match config.local_storage.source.clone() {
             config::LocalSource::Btrfs {
                 snapshots_folder,
@@ -58,69 +66,147 @@ pub struct RestoreBackupJob {
             config::RemoteDestination::Fake => Box::new(FakeDestService::empty()),
         };
 
-        IncrementalBackupJob::new(config, src_service, dest_service)
+        let decoding_tunnel = DecodingDataTunnel {
+            compression_level: config.remote_storage.compression,
+            encryption_level: config.remote_storage.encryption.clone().into(),
+        };
+
+        RestoreBackupJob {
+            decoding_data_tunnel: decoding_tunnel,
+            remote_service: Mutex::new(dest_service),
+            local_service: Mutex::new(src_service),
+            state: Mutex::default(),
+            jobs_folder: config.local_storage.jobs_folder.clone(),
+            target_backup_id: None,
+        }
     }
 
     fn run(&self) -> Self::CompletionStats {
         let started_at = chrono::Utc::now();
-        self.set_internal_state(crate::jobs::incremental_backup::state::IncrementalBackupJobState::Started { started_at });
-
         let result = self.run_impl();
-
         let finished_at = chrono::Utc::now();
-
-        objects::job_result::IncrementalBackupResult {
+        RestoreResult {
             started_at,
             finished_at,
             state: match result {
-                Ok(result) => objects::job_result::IncrementalBackupResultState::Success(result),
-                Err(err) => {
-                    objects::job_result::IncrementalBackupResultState::Error(err.to_string())
-                }
+                Ok(()) => RestoreResultState::Success(IncrementalBackupUploadResult {
+                    id: 0,
+                    parent: None,
+                    remote_filename: "".into(),
+                    local_snapshot: "".into(),
+                    bytes_read: 0,
+                    bytes_written: 0,
+                    compression_level: self.decoding_data_tunnel.compression_level,
+                    encrypted: matches!(self.decoding_data_tunnel.encryption_level, EncryptionLevel::Symmetrical { .. }),
+                }),
+                Err(err) => RestoreResultState::Error(err.to_string()),
             },
         }
     }
 
     fn stats(&self) -> Self::RunningStats {
-        let state_lock = self.state.lock().unwrap();
-        let state = state_lock.deref();
-        match state {
-            crate::jobs::incremental_backup::state::IncrementalBackupJobState::Initial => objects::job_state::IncrementalBackupState {
-                started_at: chrono::Utc::now(),
-                stage: IncrementalBackupStage::FetchingMetadata,
-            },
-            crate::jobs::incremental_backup::state::IncrementalBackupJobState::Started { started_at } => {
-                objects::job_state::IncrementalBackupState {
-                    started_at: *started_at,
-                    stage: IncrementalBackupStage::FetchingMetadata,
-                }
-            }
-            crate::jobs::incremental_backup::state::IncrementalBackupJobState::Uploading {
-                started_at,
-                uploading_state,
-            } => objects::job_state::IncrementalBackupState {
-                started_at: *started_at,
-                stage: IncrementalBackupStage::Uploading(IncrementalBackupUploadState {
-                    timestamp: chrono::Utc::now(),
-                    parent: uploading_state.parent_backup_id,
-                    remote_filename: uploading_state
-                        .remote_path_relative
-                        .to_string_lossy()
-                        .to_string(),
-                    local_snapshot: uploading_state
-                        .local_folder_relative
-                        .to_string_lossy()
-                        .to_string(),
-                    bytes_read: uploading_state.read_bytes.value(),
-                    bytes_written: uploading_state.written_bytes.value(),
-                    compression_level: self.encoding_data_tunnel.compression_level,
-                    encrypted: match &self.encoding_data_tunnel.encryption_level {
-                        EncryptionLevel::None => false,
-                        EncryptionLevel::Symmetrical { .. } => true,
-                    },
-                    finishing: uploading_state.finishing,
-                }),
-            },
+        self.state.lock().unwrap().clone()
+    }
+}
+
+impl RestoreBackupJob {
+    pub fn new(
+        config: DataDanceConfiguration,
+        local_service: Box<dyn SourceService + Send>,
+        remote_service: Box<dyn DestService + Send>,
+    ) -> Self {
+        let tunnel = DecodingDataTunnel {
+            compression_level: config.remote_storage.compression,
+            encryption_level: config.remote_storage.encryption.clone().into(),
+        };
+        Self {
+            decoding_data_tunnel: tunnel,
+            remote_service: Mutex::new(remote_service),
+            local_service: Mutex::new(local_service),
+            state: Mutex::default(),
+            jobs_folder: config.local_storage.jobs_folder.clone(),
+            target_backup_id: None,
         }
     }
-}*/
+
+    pub fn new_with_target(
+        config: DataDanceConfiguration,
+        local_service: Box<dyn SourceService + Send>,
+        remote_service: Box<dyn DestService + Send>,
+        target_backup_id: Option<u32>,
+    ) -> Self {
+        let mut s = Self::new(config, local_service, remote_service);
+        s.target_backup_id = target_backup_id;
+        s
+    }
+
+    pub fn run_impl(&self) -> Result<(), std::io::Error> {
+        // Read history to determine sequence
+        let history = {
+            let remote = self.remote_service.lock().unwrap();
+            remote.backup_history()?
+        };
+        let mut entries = history.entries.clone();
+        entries.sort_by_key(|e| e.timestamp);
+
+        use crate::objects::RestoreJobMetadata;
+        let target_backup_id = self
+            .target_backup_id
+            .or_else(|| entries.last().map(|e| e.id))
+            .unwrap_or(0);
+        let job_id = chrono::Utc::now().timestamp_millis().to_string();
+        let metadata_path = self
+            .jobs_folder
+            .join(format!("restore_{}.json", job_id));
+        let write_metadata = |meta: &RestoreJobMetadata| -> std::io::Result<()> {
+            let handle = std::fs::File::create(&metadata_path)?;
+            serde_json::to_writer(std::io::BufWriter::new(handle), meta)?;
+            Ok(())
+        };
+        write_metadata(&RestoreJobMetadata {
+            job_id: job_id.clone(),
+            target_backup_id,
+            current_backup_id: None,
+            current_snapshot: None,
+        })?;
+
+        let mut previous_snapshot: Option<PathBuf> = None;
+        for entry in entries {
+            let reader = {
+                let remote = self.remote_service.lock().unwrap();
+                remote.get_backup_reader(entry.remote_filename.clone())?
+            };
+            let writer = {
+                let local = self.local_service.lock().unwrap();
+                local.get_restore_writer(entry.local_snapshot.clone())?
+            };
+
+            let transfer = self
+                .decoding_data_tunnel
+                .clone()
+                .tracked_transfer(reader, writer);
+            transfer.run()?;
+
+            {
+                let local = self.local_service.lock().unwrap();
+                local.apply_restored_snapshot(previous_snapshot.clone(), entry.local_snapshot.clone())?;
+            }
+
+            // update metadata
+            write_metadata(&RestoreJobMetadata {
+                job_id: job_id.clone(),
+                target_backup_id,
+                current_backup_id: Some(entry.id),
+                current_snapshot: Some(entry.local_snapshot.clone()),
+            })?;
+
+            previous_snapshot = Some(entry.local_snapshot);
+
+            if entry.id == target_backup_id {
+                break;
+            }
+        }
+
+        Ok(())
+    }
+}

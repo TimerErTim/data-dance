@@ -1,4 +1,5 @@
 use crate::jobs::incremental_backup::IncrementalBackupJob;
+use crate::jobs::restore::RestoreBackupJob;
 use crate::jobs::Job;
 
 pub enum JobVariant {
@@ -7,7 +8,7 @@ pub enum JobVariant {
 }
 
 pub enum RestorationJobVariant {
-    DataRestoration(),
+    DataRestoration(RestoreBackupJob),
 }
 
 pub enum BackupJobVariant {
@@ -18,5 +19,11 @@ pub enum BackupJobVariant {
 impl From<IncrementalBackupJob> for JobVariant {
     fn from(value: IncrementalBackupJob) -> Self {
         JobVariant::Backup(BackupJobVariant::IncrementalDataBackup(value))
+    }
+}
+
+impl From<RestoreBackupJob> for JobVariant {
+    fn from(value: RestoreBackupJob) -> Self {
+        JobVariant::Restoration(RestorationJobVariant::DataRestoration(value))
     }
 }

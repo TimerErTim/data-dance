@@ -56,7 +56,7 @@ impl JobExecutor {
                 current_backup_guard.deref_mut().replace(Arc::clone(&job));
                 JobVariantReference::Backup(job)
             }
-            JobVariant::Restoration(restoration_job) => {
+                JobVariant::Restoration(restoration_job) => {
                 let mut current_restoration_guard = self.current_restoration.lock().unwrap();
                 if current_restoration_guard.is_some() {
                     return Err(ExecutorError::JobAlreadyRunning);
@@ -118,7 +118,14 @@ impl JobExecutor {
         let current_restoration = self.current_restoration.lock().unwrap();
 
         JobStates {
-            restore: None,
+            restore: current_restoration
+                .as_deref()
+                .map(|job| match job {
+                    RestorationJobVariant::DataRestoration(restore_job) => {
+                        Some(RestoreJobState::FullRestoration(restore_job.stats()))
+                    }
+                })
+                .flatten(),
             backup: current_backup
                 .as_deref()
                 .map(|job| match job {
@@ -164,10 +171,8 @@ impl JobVariantReference {
                     JobResult::IncrementalBackup(incremental_job.run())
                 }
             },
-            JobVariantReference::Restoration(job) => match job {
-                &_ => {
-                    todo!()
-                }
+            JobVariantReference::Restoration(job) => match job.deref() {
+                RestorationJobVariant::DataRestoration(job) => JobResult::Restore(job.run()),
             },
         }
     }

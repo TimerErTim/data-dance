@@ -63,8 +63,16 @@ impl SourceService for FakeSourceService {
         Ok(())
     }
 
-    fn get_restore_writer(&self, restored_folder: PathBuf) -> std::io::Result<Box<dyn Write>> {
-        todo!()
+    fn get_restore_writer(&self, _restored_snapshot: PathBuf) -> std::io::Result<Box<dyn Write>> {
+        Ok(Box::new(std::io::sink()))
+    }
+
+    fn apply_restored_snapshot(
+        &self,
+        _previous_snapshot: Option<PathBuf>,
+        _new_snapshot: PathBuf,
+    ) -> io::Result<()> {
+        Ok(())
     }
 }
 
