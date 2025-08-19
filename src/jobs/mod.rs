@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 
 mod executor;
 mod full_backup;
-pub mod restore;
 pub mod incremental_backup;
+pub mod restore;
 mod variants;
 
 pub use executor::*;

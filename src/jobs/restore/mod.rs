@@ -1,7 +1,10 @@
 use crate::config::DataDanceConfiguration;
 use crate::jobs::restore::state::RestoreBackupState;
 use crate::jobs::Job;
-use crate::objects::job_result::{RestoreResult, RestoreResultState, IncrementalBackupUploadResult};
+use crate::objects::job_params::RestoreParams;
+use crate::objects::job_result::{
+    IncrementalBackupUploadResult, RestoreResult, RestoreResultState,
+};
 use crate::objects::EncryptionLevel;
 use crate::services::data_dest::bare_fs::BareFsDestService;
 use crate::services::data_dest::fake::FakeDestService;
@@ -30,7 +33,7 @@ pub struct RestoreBackupJob {
 
     jobs_folder: PathBuf,
 
-    target_backup_id: Option<u32>,
+    target_backup_id: u32,
 }
 
 impl Job for RestoreBackupJob {
@@ -38,7 +41,7 @@ impl Job for RestoreBackupJob {
     type RunningStats = RestoreBackupState;
     type Params = RestoreParams;
 
-    fn from_config(config: DataDanceConfiguration, ) -> Self {
+    fn from_config(config: DataDanceConfiguration, params: Self::Params) -> Self {
         let src_service = match config.local_storage.source.clone() {
             config::LocalSource::Btrfs {
                 snapshots_folder,
@@ -77,7 +80,7 @@ impl Job for RestoreBackupJob {
             local_service: Mutex::new(src_service),
             state: Mutex::default(),
             jobs_folder: config.local_storage.jobs_folder.clone(),
-            target_backup_id: None,
+            target_backup_id: params.backup_id,
         }
     }
 
@@ -97,7 +100,10 @@ impl Job for RestoreBackupJob {
                     bytes_read: 0,
                     bytes_written: 0,
                     compression_level: self.decoding_data_tunnel.compression_level,
-                    encrypted: matches!(self.decoding_data_tunnel.encryption_level, EncryptionLevel::Symmetrical { .. }),
+                    encrypted: matches!(
+                        self.decoding_data_tunnel.encryption_level,
+                        EncryptionLevel::Symmetrical { .. }
+                    ),
                 }),
                 Err(err) => RestoreResultState::Error(err.to_string()),
             },
@@ -112,6 +118,7 @@ impl Job for RestoreBackupJob {
 impl RestoreBackupJob {
     pub fn new(
         config: DataDanceConfiguration,
+        target_backup_id: u32,
         local_service: Box<dyn SourceService + Send>,
         remote_service: Box<dyn DestService + Send>,
     ) -> Self {
@@ -125,19 +132,8 @@ impl RestoreBackupJob {
             local_service: Mutex::new(local_service),
             state: Mutex::default(),
             jobs_folder: config.local_storage.jobs_folder.clone(),
-            target_backup_id: None,
+            target_backup_id,
         }
-    }
-
-    pub fn new_with_target(
-        config: DataDanceConfiguration,
-        local_service: Box<dyn SourceService + Send>,
-        remote_service: Box<dyn DestService + Send>,
-        target_backup_id: Option<u32>,
-    ) -> Self {
-        let mut s = Self::new(config, local_service, remote_service);
-        s.target_backup_id = target_backup_id;
-        s
     }
 
     pub fn run_impl(&self) -> Result<(), std::io::Error> {
@@ -150,14 +146,8 @@ impl RestoreBackupJob {
         entries.sort_by_key(|e| e.timestamp);
 
         use crate::objects::RestoreJobMetadata;
-        let target_backup_id = self
-            .target_backup_id
-            .or_else(|| entries.last().map(|e| e.id))
-            .unwrap_or(0);
         let job_id = chrono::Utc::now().timestamp_millis().to_string();
-        let metadata_path = self
-            .jobs_folder
-            .join(format!("restore_{}.json", job_id));
+        let metadata_path = self.jobs_folder.join(format!("restore_{}.json", job_id));
         let write_metadata = |meta: &RestoreJobMetadata| -> std::io::Result<()> {
             let handle = std::fs::File::create(&metadata_path)?;
             serde_json::to_writer(std::io::BufWriter::new(handle), meta)?;
@@ -165,7 +155,7 @@ impl RestoreBackupJob {
         };
         write_metadata(&RestoreJobMetadata {
             job_id: job_id.clone(),
-            target_backup_id,
+            target_backup_id: self.target_backup_id,
             current_backup_id: None,
             current_snapshot: None,
         })?;
@@ -189,20 +179,23 @@ impl RestoreBackupJob {
 
             {
                 let local = self.local_service.lock().unwrap();
-                local.apply_restored_snapshot(previous_snapshot.clone(), entry.local_snapshot.clone())?;
+                local.apply_restored_snapshot(
+                    previous_snapshot.clone(),
+                    entry.local_snapshot.clone(),
+                )?;
             }
 
             // update metadata
             write_metadata(&RestoreJobMetadata {
                 job_id: job_id.clone(),
-                target_backup_id,
+                target_backup_id: self.target_backup_id,
                 current_backup_id: Some(entry.id),
                 current_snapshot: Some(entry.local_snapshot.clone()),
             })?;
 
             previous_snapshot = Some(entry.local_snapshot);
 
-            if entry.id == target_backup_id {
+            if entry.id == self.target_backup_id {
                 break;
             }
         }

@@ -131,19 +131,23 @@ impl SourceService for BtrfsSourceService {
     }
 
     fn get_restore_writer(&self, _restored_snapshot: PathBuf) -> io::Result<Box<dyn Write>> {
-            // restored_snapshot is expected to be the subvolume name to create
-            let mut receive_command = std::process::Command::new("btrfs");
-            receive_command
-                .args(["receive"]) // will create subvolumes inside snapshot folder
-                .arg(&self.snapshot_folder)
-                .stdin(Stdio::piped())
-                .stdout(Stdio::null());
-            let mut process = receive_command.spawn()?;
-            let stdin = process.stdin.take().unwrap();
-            Ok(Box::new(AwaitedStdin::from((stdin, process))) as Box<dyn Write>)
+        // restored_snapshot is expected to be the subvolume name to create
+        let mut receive_command = std::process::Command::new("btrfs");
+        receive_command
+            .args(["receive"]) // will create subvolumes inside snapshot folder
+            .arg(&self.snapshot_folder)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null());
+        let mut process = receive_command.spawn()?;
+        let stdin = process.stdin.take().unwrap();
+        Ok(Box::new(AwaitedStdin::from((stdin, process))) as Box<dyn Write>)
     }
 
-    fn apply_restored_snapshot(&self, previous_snapshot: Option<PathBuf>, new_snapshot: PathBuf) -> io::Result<()> {
+    fn apply_restored_snapshot(
+        &self,
+        previous_snapshot: Option<PathBuf>,
+        new_snapshot: PathBuf,
+    ) -> io::Result<()> {
         if let Some(prev) = previous_snapshot {
             // remove previous snapshot once new one is received/applied
             let _ = self.remove_snapshot(prev);

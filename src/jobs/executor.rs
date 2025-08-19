@@ -2,7 +2,7 @@ use crate::config::DataDanceConfiguration;
 use crate::jobs::variants::{BackupJobVariant, JobVariant, RestorationJobVariant};
 use crate::jobs::Job;
 use crate::objects::job_result::{IncrementalBackupResultState, JobResult};
-use crate::objects::job_state::{BackupJobState, JobStates};
+use crate::objects::job_state::{BackupJobState, JobStates, RestoreJobState};
 use crate::objects::JobHistory;
 use std::fs::{File, OpenOptions};
 use std::io;
@@ -56,7 +56,7 @@ impl JobExecutor {
                 current_backup_guard.deref_mut().replace(Arc::clone(&job));
                 JobVariantReference::Backup(job)
             }
-                JobVariant::Restoration(restoration_job) => {
+            JobVariant::Restoration(restoration_job) => {
                 let mut current_restoration_guard = self.current_restoration.lock().unwrap();
                 if current_restoration_guard.is_some() {
                     return Err(ExecutorError::JobAlreadyRunning);

@@ -2,7 +2,7 @@ use crate::objects::BackupHistory;
 use crate::services::data_dest::DestService;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::io::{Empty, Sink, Write, Read};
+use std::io::{Empty, Read, Sink, Write};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -42,7 +42,9 @@ impl DestService for FakeDestService {
 
     fn get_backup_writer(&self, relative_file_path: PathBuf) -> std::io::Result<Box<dyn Write>> {
         let mut files = self.files.lock().unwrap();
-        let entry = files.entry(relative_file_path.clone()).or_insert_with(Vec::new);
+        let entry = files
+            .entry(relative_file_path.clone())
+            .or_insert_with(Vec::new);
         let buffer_ref = Arc::new(Mutex::new(Vec::<u8>::new()));
         // ensure clean slate
         *entry = Vec::new();
@@ -98,5 +100,7 @@ impl Write for VecWriter {
         Ok(buf.len())
     }
 
-    fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
 }

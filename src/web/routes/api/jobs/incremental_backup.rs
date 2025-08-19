@@ -28,7 +28,7 @@ pub async fn handle_incremental_backup(
     };
 
     let job = IncrementalBackupJob::from_config(config, ());
-    
+
     match context
         .executor
         .submit_job(JobVariant::Backup(BackupJobVariant::IncrementalDataBackup(
