@@ -11,7 +11,7 @@ pub struct RestoreResult {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum RestoreResultState {
     Error(String),
-    Success(crate::objects::job_result::IncrementalBackupUploadResult),
+    Success(RestoreSuccess),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

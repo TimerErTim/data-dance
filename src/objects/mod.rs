@@ -4,6 +4,7 @@ mod encryption;
 mod job_history;
 pub mod job_result;
 pub mod job_state;
+pub mod job_params;
 mod restore_metadata;
 mod sensitive;
 
