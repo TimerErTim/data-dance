@@ -3,10 +3,12 @@ port = 3000
 host = "127.0.0.1"
 
 [local_storage]
-jobs_folder = "./resources/"
+jobs_folder = "local/jobs/"
 
-[local_storage.source.Fake]
-backup_byte_size = 10_024_000_000
+[local_storage.source.Btrfs]
+snapshots_folder = "local/btrfs-mnt/snapshots/"
+source_folder = "local/btrfs-mnt/data/"
+send_compressed_data = true
 
 [remote_storage]
 encryption = "123456"

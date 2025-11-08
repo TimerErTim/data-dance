@@ -1,0 +1,24 @@
+[tasks."setup:btrfs-local-unmount"]
+description = "Unmount the btrfs local image file for easy local testing"
+run = [
+    "sudo umount local/btrfs-mnt/ || true",
+]
+
+[tasks."setup:btrfs-local-img"]
+description = "Setup a btrfs local image file for easy local testing"
+depends = ["setup:btrfs-local-unmount"]
+outputs = ["local/btrfs.img"]
+sources = ["local/btrfs.img"]
+run = [
+    "dd if=/dev/zero of=local/btrfs.img bs=1G count=8",
+    "mkfs.btrfs local/btrfs.img",
+]
+
+[tasks."setup:btrfs-local-mount"]
+description = "Mount the btrfs local image file for easy local testing"
+depends = ["setup:btrfs-local-img"]
+run = [
+    "mkdir -p local/btrfs-mnt/",
+    "sudo mount -o loop,user local/btrfs.img local/btrfs-mnt/",
+    "sudo chown -R --reference=local local/btrfs-mnt/",
+]
