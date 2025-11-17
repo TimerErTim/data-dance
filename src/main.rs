@@ -1,6 +1,7 @@
 #![feature(path_add_extension)]
 #![feature(result_flattening)]
 #![feature(try_blocks)]
+#![feature(if_let_guard)]
 #![allow(warnings)]
 
 use std::process::exit;

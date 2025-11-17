@@ -112,7 +112,7 @@ impl<R: RngCore> Read for RandomByteReader<R> {
             self.rng.fill_bytes(buf);
         } else {
             for byte in &mut buf[..bytes_to_generate] {
-                *byte = self.rng.gen();
+                *byte = self.rng.random();
             }
         }
 

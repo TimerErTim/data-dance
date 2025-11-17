@@ -60,9 +60,19 @@ run = [
 
 [tasks."build:server"]
 description = "Build the server for release with embedded frontend"
+sources = ["Cargo.toml", "Cargo.lock", "src/**/*"]
+outputs = ["target/release/data-dance"]
 depends = ["build:frontend"]
 run = [
     "rm -rf target/site/",
     "cp -r frontend/out target/site",
     "cargo build --release",
+]
+
+[tasks."run:server"]
+description = "Runs the built release server"
+depends = ["build:server"]
+env.DATA_DANCE_CONFIG = "resources/testing/config.toml"
+run = [
+    "target/release/data-dance",
 ]

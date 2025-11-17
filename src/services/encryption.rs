@@ -30,7 +30,7 @@ impl EncryptionLevel {
             }
 
             // Generate the random Vec<u8>
-            (0..length).map(|_| rng.gen()).collect()
+            (0..length).map(|_| rng.random()).collect()
         }
 
         let key_len = cipher.key_len();

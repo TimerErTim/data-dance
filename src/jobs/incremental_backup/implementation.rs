@@ -3,7 +3,7 @@ use crate::jobs::incremental_backup::state::IncrementalBackupJobState;
 use crate::jobs::incremental_backup::IncrementalBackupJob;
 use crate::jobs::Job;
 use crate::objects::job_result::IncrementalBackupUploadResult;
-use crate::objects::job_state::IncrementalBackupStage;
+use crate::objects::job_state::{FetchingMetadataState, IncrementalBackupStage};
 use crate::objects::{CompressionLevel, EncryptionLevel};
 use crate::services::data_dest::bare_fs::BareFsDestService;
 use crate::services::data_dest::fake::FakeDestService;
@@ -77,12 +77,12 @@ impl Job for IncrementalBackupJob {
         match state {
             IncrementalBackupJobState::Initial => objects::job_state::IncrementalBackupState {
                 started_at: chrono::Utc::now(),
-                stage: IncrementalBackupStage::FetchingMetadata,
+                stage: FetchingMetadataState.into(),
             },
             IncrementalBackupJobState::Started { started_at } => {
                 objects::job_state::IncrementalBackupState {
                     started_at: *started_at,
-                    stage: IncrementalBackupStage::FetchingMetadata,
+                    stage: FetchingMetadataState.into(),
                 }
             }
             IncrementalBackupJobState::Uploading {
