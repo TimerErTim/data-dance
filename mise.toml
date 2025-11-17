@@ -1,3 +1,7 @@
+[tools]
+node = "25.2.0"
+rust = "nightly"
+
 [tasks."setup:btrfs-local-unmount"]
 description = "Unmount the btrfs local image file for easy local testing"
 run = [
@@ -20,4 +24,45 @@ run = [
     "mkdir -p local/btrfs-mnt/",
     "sudo mount -o loop,user local/btrfs.img local/btrfs-mnt/",
     "sudo chown --reference=local local/btrfs-mnt/",
+]
+
+[tasks."install:frontend"]
+description = "Install the frontend dependencies"
+dir = "frontend/"
+sources = ["package.json", "package-lock.json"]
+outputs = ["node_modules/**/*"]
+run = [
+    "npm install",
+]
+
+[tasks."build:frontend"]
+description = "Build the frontend"
+dir = "frontend/"
+sources = ["package.json", "package-lock.json", "next.config.ts", "tsconfig.json", "tailwind.config.js", "postcss.config.js", "src/**/*", "public/**/*"]
+outputs = ["out/**/*"]
+run = [
+    "npm run build",
+]
+
+[tasks."dev:frontend"]
+description = "Run the frontend development server"
+dir = "frontend/"
+run = [
+    "npm run dev",
+]
+
+[tasks."dev:server"]
+description = "Run the server in development mode"
+env.DATA_DANCE_CONFIG = "resources/testing/config.toml"
+run = [
+    "cargo run",
+]
+
+[tasks."build:server"]
+description = "Build the server for release with embedded frontend"
+depends = ["build:frontend"]
+run = [
+    "rm -rf target/site/",
+    "cp -r frontend/out target/site",
+    "cargo build --release",
 ]
