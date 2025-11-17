@@ -14,5 +14,5 @@ send_compressed_data = true
 encryption = "123456"
 compression = "Best"
 
-[remote_storage.dest]
-Fake = {}
+[remote_storage.dest.Local]
+folder = "local/backups/"

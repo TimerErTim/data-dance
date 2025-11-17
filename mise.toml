@@ -16,9 +16,8 @@ run = [
 
 [tasks."setup:btrfs-local-mount"]
 description = "Mount the btrfs local image file for easy local testing"
-depends = ["setup:btrfs-local-img"]
 run = [
     "mkdir -p local/btrfs-mnt/",
     "sudo mount -o loop,user local/btrfs.img local/btrfs-mnt/",
-    "sudo chown -R --reference=local local/btrfs-mnt/",
+    "sudo chown --reference=local local/btrfs-mnt/",
 ]
