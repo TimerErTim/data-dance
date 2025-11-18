@@ -65,15 +65,35 @@ sources = ["Cargo.toml", "Cargo.lock", "src/**/*"]
 outputs = ["frontend/src/lib/api/spec.ts"]
 run = """
 #!/usr/bin/env bash
-
 set -e
 
-# Check if server is already running (probe /api/spec endpoint)
-echo "Checking if dev server is running..."
-TIMEOUT=5
+# Start the dev server in the background
+mise run --quiet --raw dev:server &
+SERVER_PID=$!
+
+# Function to cleanup on exit
+cleanup() {
+    if kill -0 $SERVER_PID 2>/dev/null; then
+        echo "Terminating dev server (PID: $SERVER_PID)..."
+        kill -9 $SERVER_PID
+    fi
+}
+
+# Set trap to cleanup on script exit
+trap cleanup EXIT
+
+# Wait for server to be healthy (probe /api/spec endpoint)
+echo "Waiting for dev server to be ready..."
+TIMEOUT=30
 ELAPSED=0
 
+sleep 5 # Initial wait for server to start
 while [ $ELAPSED -lt $TIMEOUT ]; do
+    if ! kill -0 $SERVER_PID 2>/dev/null; then
+        echo "Dev server process died unexpectedly"
+        exit 1
+    fi
+
     if curl -s -f http://localhost:3000/api/spec > /dev/null 2>&1; then
         echo "Dev server is ready!"
         break
@@ -84,7 +104,7 @@ while [ $ELAPSED -lt $TIMEOUT ]; do
 done
 
 if [ $ELAPSED -ge $TIMEOUT ]; then
-    echo "Dev server is not running. Please start it with 'mise run dev:server'"
+    echo "Timeout waiting for dev server to be ready"
     exit 1
 fi
 
@@ -93,6 +113,8 @@ echo "Fetching OpenAPI spec..."
 npx -y openapi-typescript http://localhost:3000/api/spec -o frontend/src/lib/api/spec.ts
 
 echo "OpenAPI spec generated successfully!"
+echo "killing dev server..."
+kill -9 $SERVER_PID
 """
 
 [tasks."build:server"]
