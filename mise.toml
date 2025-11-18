@@ -40,6 +40,7 @@ description = "Build the frontend"
 dir = "frontend/"
 sources = ["package.json", "package-lock.json", "next.config.ts", "tsconfig.json", "tailwind.config.js", "postcss.config.js", "src/**/*", "public/**/*"]
 outputs = ["out/**/*"]
+depends = ["build:openapi-fetch-spec"]
 run = [
     "npm run build",
 ]
@@ -57,6 +58,42 @@ env.DATA_DANCE_CONFIG = "resources/testing/config.toml"
 run = [
     "cargo run",
 ]
+
+[tasks."build:openapi-fetch-spec"]
+description = "Fetch the OpenAPI spec from the server and inject into client"
+sources = ["Cargo.toml", "Cargo.lock", "src/**/*"]
+outputs = ["frontend/src/lib/api/spec.ts"]
+run = """
+#!/usr/bin/env bash
+
+set -e
+
+# Check if server is already running (probe /api/spec endpoint)
+echo "Checking if dev server is running..."
+TIMEOUT=5
+ELAPSED=0
+
+while [ $ELAPSED -lt $TIMEOUT ]; do
+    if curl -s -f http://localhost:3000/api/spec > /dev/null 2>&1; then
+        echo "Dev server is ready!"
+        break
+    fi
+    
+    sleep 1
+    ELAPSED=$((ELAPSED + 1))
+done
+
+if [ $ELAPSED -ge $TIMEOUT ]; then
+    echo "Dev server is not running. Please start it with 'mise run dev:server'"
+    exit 1
+fi
+
+# Fetch the OpenAPI spec using openapi-fetch
+echo "Fetching OpenAPI spec..."
+npx -y openapi-typescript http://localhost:3000/api/spec -o frontend/src/lib/api/spec.ts
+
+echo "OpenAPI spec generated successfully!"
+"""
 
 [tasks."build:server"]
 description = "Build the server for release with embedded frontend"
