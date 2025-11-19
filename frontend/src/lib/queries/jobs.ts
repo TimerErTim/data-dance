@@ -7,23 +7,25 @@ import {
     CurrentIncrementalBackupFetchingMetadata,
     CurrentIncrementalBackupUploading
 } from "@/lib/model";
+import { client } from "../api";
+import { components } from "../api/spec";
 
-export function convertCurrentBackupJob(data: CurrentJobsAPI): CurrentBackupJob | null {
-    if (!data.backup) {
+export function convertCurrentBackupJob(data: components["schemas"]["JobStates"]["backup"]): CurrentBackupJob | null {
+    if (data === undefined) {
         return null
     }
 
     const stage: CurrentIncrementalBackupUploading | CurrentIncrementalBackupFetchingMetadata = (() => {
-        if (data.backup!!.Incremental.stage === "FetchingMetadata") {
+        if (data.stage.stage === "FetchingMetadata") {
             return {
                 tag: "FetchingMetadata"
             }
         } else {
-            const uploading = data.backup!!.Incremental.stage.Uploading
+            const uploading = data.stage
             return {
                 tag: "Uploading",
                 timestamp: new Date(uploading.timestamp),
-                parent: uploading.parent,
+                parent: uploading.parent ?? null,
                 remoteFilename: uploading.remote_filename,
                 localSnapshot: uploading.local_snapshot,
                 bytesRead: uploading.bytes_read,
@@ -37,7 +39,7 @@ export function convertCurrentBackupJob(data: CurrentJobsAPI): CurrentBackupJob 
     })()
 
     return {
-        startedAt: new Date(data.backup.Incremental.started_at),
+        startedAt: new Date(data.started_at),
         incremental: {
             stage
         }
@@ -48,9 +50,11 @@ export function currentJobsQuery() {
     return queryOptions({
         queryKey: ['currentJobs'],
         queryFn: async () => {
-            const response = await fetch(config.host + '/api/jobs/status');
-            const payload = await response.json();
-            return payload as CurrentJobsAPI
+            const resp = await client.GET("/jobs")
+            if (!resp.response) {
+                throw resp.error
+            }
+            return resp.data?.backup
         },
         refetchInterval: 1000
     })
@@ -128,5 +132,8 @@ export function useCurrentBackupJob() {
             data: newData
         }
     }
-    return query
+    return {
+        ...query,
+        data: null
+    }
 }

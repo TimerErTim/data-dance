@@ -35,6 +35,14 @@ run = [
     "npm install",
 ]
 
+[tasks."test:frontend:ts"]
+description = "Test the frontend types"
+dir = "frontend/"
+sources = ["package.json", "package-lock.json", "next.config.ts", "tsconfig.json", "tailwind.config.js", "postcss.config.js", "src/**/*", "public/**/*"]
+run = [
+    "npm run test:ts",
+]
+
 [tasks."build:frontend"]
 description = "Build the frontend"
 dir = "frontend/"
