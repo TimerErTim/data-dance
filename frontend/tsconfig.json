@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "es5",
     "lib": [
       "dom",
       "dom.iterable",
@@ -16,7 +16,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noUncheckedIndexedAccess": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "incremental": true,
     "plugins": [
       {
@@ -36,8 +36,9 @@
     ".next/types/**/*.ts",
     "next-env.d.ts",
     "out/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
-, "src/app/hero.mts"  ],
+    ".next/dev/types/**/*.ts",
+    "src/app/hero.mts"
+  ],
   "exclude": [
     "node_modules"
   ]

@@ -41,6 +41,7 @@ dir = "frontend/"
 sources = ["package.json", "package-lock.json", "next.config.ts", "tsconfig.json", "tailwind.config.js", "postcss.config.js", "src/**/*", "public/**/*"]
 outputs = ["out/**/*"]
 depends = ["build:openapi-fetch-spec"]
+wait_for = ["install:frontend"]
 run = [
     "npm run build",
 ]
