@@ -77,6 +77,9 @@ export function useCurrentBackupJob() {
         }
 
         const previousQuery = previousQueries[previousQueries.length - 1]
+        if (!previousQuery) {
+            return
+        }
         const previousBytesWritten = previousQuery.incremental.stage.tag === "Uploading" ? previousQuery.incremental.stage.bytesWritten : 0
         if (previousBytesWritten > backupJob.incremental.stage.bytesWritten) {
             previousQueries.length = 0
@@ -95,6 +98,12 @@ export function useCurrentBackupJob() {
         }
 
         const referenceQuery = previousBackupJobs[0]
+        if (!referenceQuery) {
+            return {
+                ...query,
+                data: newData
+            }
+        }
         if (referenceQuery.incremental.stage.tag !== "Uploading" || newData.incremental.stage.tag !== "Uploading" || newData.incremental.stage.timestamp.getTime() == referenceQuery.incremental.stage.timestamp.getTime()) {
             return {
                 ...query,

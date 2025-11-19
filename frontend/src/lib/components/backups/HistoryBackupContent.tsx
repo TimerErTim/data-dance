@@ -3,7 +3,7 @@ import {Accordion, AccordionItem, Button, DateRangePicker, RangeValue} from "@he
 import {formatDateTime} from "@/lib/format/dates";
 import {formatBytesBase10} from "@/lib/format/bytes";
 import {Clock, Minus, Upload, XCircle} from "@deemlol/next-icons";
-import {Chip} from "@heroui/chip";
+import {Chip} from "@heroui/react";
 import {useState} from "react";
 import {CalendarDate} from "@internationalized/date";
 
@@ -61,7 +61,7 @@ export default function HistoryBackupContent(
                              label="Filter by date" value={dateRange} onChange={setDateRange}/>
             <Accordion isCompact={true} selectionBehavior="toggle" selectionMode="multiple" showDivider={false}
                        className="flex flex-col gap-1 flex-1 min-h-0 overflow-y-auto bg-transparent px-0" itemClasses={{
-                base: "py-0 px-0 w-full shadow-lg border-1 rounded-lg bg-white",
+                base: "py-0 px-0 w-full shadow-lg border rounded-lg bg-white",
                 title: "font-normal text-medium flex flex-row items-center",
                 trigger: "p-2 data-[hover=true]:bg-default-100 rounded-lg flex items-center",
                 content: "p-2 text-small",

@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@deemlol/next-icons": "^0.1.9",
+    "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",

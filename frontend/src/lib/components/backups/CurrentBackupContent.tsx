@@ -1,7 +1,7 @@
 import {CurrentBackupJob} from "@/lib/model";
 import {formatDateTime} from "@/lib/format/dates";
 import {Spinner, Switch} from "@heroui/react";
-import {Chip} from "@heroui/chip";
+import {Chip} from "@heroui/react";
 import {Clock} from "@deemlol/next-icons";
 import {formatBytesBase10} from "@/lib/format/bytes";
 
