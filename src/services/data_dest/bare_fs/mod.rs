@@ -1,4 +1,7 @@
-use crate::objects::BackupHistory;
+use poem_openapi::types::{ParseFromJSON, ToJSON};
+use serde_json::Value;
+
+use crate::objects::{BackupHistory, Path};
 use crate::services::data_dest::DestService;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
@@ -28,8 +31,11 @@ impl DestService for BareFsDestService {
             }
         };
 
-        let history = serde_json::from_reader(BufReader::new(handle))?;
-        Ok(history)
+        let reader_content: Option<Value> = serde_json::from_reader(BufReader::new(handle))?;
+        match reader_content {
+            Some(value) => Ok(BackupHistory::parse_from_json(Some(value)).map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.message()))?),
+            None => Ok(BackupHistory { entries: vec![] }),
+        }
     }
 
     fn get_backup_writer(&self, relative_file_path: PathBuf) -> std::io::Result<Box<dyn Write>> {
@@ -44,7 +50,7 @@ impl DestService for BareFsDestService {
     fn set_backup_history(&self, history: BackupHistory) -> std::io::Result<()> {
         let file = self.dest_folder.join("backup_history.json");
         let handle = File::create(file)?;
-        serde_json::to_writer(BufWriter::new(handle), &history)?;
+        serde_json::to_writer(BufWriter::new(handle), &history.to_json())?;
         Ok(())
     }
 
@@ -72,7 +78,7 @@ impl DestService for BareFsDestService {
             if history
                 .entries
                 .iter()
-                .find(|entry| entry.remote_filename == PathBuf::from(file_name.clone()))
+                .find(|entry| entry.remote_filename == Path::from(file_name.clone()))
                 .is_none()
             {
                 let file_path = self.dest_folder.join(file_name);

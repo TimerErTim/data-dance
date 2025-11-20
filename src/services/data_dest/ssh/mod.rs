@@ -1,4 +1,7 @@
-use crate::objects::{BackupHistory, SensitiveString};
+use poem_openapi::types::{ParseFromJSON, ToJSON};
+use serde_json::Value;
+
+use crate::objects::{BackupHistory, SensitiveString, Path};
 use crate::services::data_dest::DestService;
 use crate::services::data_source::btrfs::BtrfsSourceService;
 use crate::services::processes::{AwaitedChild, AwaitedStdin};
@@ -162,17 +165,11 @@ impl SshDestService {
     ) -> std::io::Result<BackupHistory> {
         let (reader, _) = self.open_reader(relative_file_path.into())?;
 
-        let history = match serde_json::from_reader(reader) {
-            Err(err) => {
-                return if err.is_eof() {
-                    Ok(BackupHistory { entries: vec![] })
-                } else {
-                    Err(err)?
-                }
-            }
-            Ok(reader) => reader,
-        };
-        Ok(history)
+        let reader_content: Option<Value> = serde_json::from_reader(reader)?;
+        match reader_content {
+            Some(value) => Ok(BackupHistory::parse_from_json(Some(value)).map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.message()))?),
+            None => Ok(BackupHistory { entries: vec![] }),
+        }
     }
 }
 
@@ -189,7 +186,7 @@ impl DestService for SshDestService {
     fn set_backup_history(&self, history: BackupHistory) -> std::io::Result<()> {
         let try_setting_history = || -> std::io::Result<()> {
             let (writer, write_process) = self.open_writer("bh_new.json".into())?;
-            serde_json::to_writer(writer, &history)?;
+            serde_json::to_writer(writer, &history.to_json())?;
             drop(write_process);
             thread::sleep(Duration::from_secs(1));
             let written_history = self.read_history_at("bh_new.json")?;
@@ -232,7 +229,7 @@ impl DestService for SshDestService {
             if history
                 .entries
                 .iter()
-                .find(|entry| entry.remote_filename == file_name)
+                .find(|entry| entry.remote_filename == Path::from(file_name.clone()))
                 .is_none()
             {
                 if self.remove_file(file_name).is_ok() {

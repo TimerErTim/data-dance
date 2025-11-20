@@ -4,7 +4,7 @@ use crate::jobs::incremental_backup::state::{
 use crate::jobs::incremental_backup::IncrementalBackupJob;
 use crate::objects::job_result::IncrementalBackupUploadResult;
 use crate::objects::job_state::IncrementalBackupUploadState;
-use crate::objects::{BackupEntry, BackupType, EncryptionLevel};
+use crate::objects::{BackupEntry, BackupType, EncryptionLevel, Path};
 use crate::services::data_tunnel::{DataTunnel, TrackedTransfer};
 use rand::{random, thread_rng, Rng};
 use std::ops::{Deref, DerefMut};
@@ -108,8 +108,8 @@ impl IncrementalBackupJob {
             id: new_backup_id,
             parent: backup_src.parent_backup_id,
             timestamp: now.timestamp_millis() as u64,
-            remote_filename: dest_filename,
-            local_snapshot: backup_src.local_snapshot_relative,
+            remote_filename: Path::from(dest_filename),
+            local_snapshot: Path::from(backup_src.local_snapshot_relative),
             backup_type: match backup_src.parent_backup_id {
                 None => BackupType::Full,
                 Some(_) => BackupType::Incremental,
