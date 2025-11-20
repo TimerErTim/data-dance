@@ -6,22 +6,14 @@
 
 use std::process::exit;
 
-mod config;
-mod context;
-mod jobs;
-mod objects;
-mod scripts;
-mod services;
-mod web;
-
 #[tokio::main]
 async fn main() {
-    use crate::jobs::JobExecutor;
-    use crate::web::routes::run_server;
+    use data_dance::jobs::JobExecutor;
+    use data_dance::web::routes::run_server;
 
-    let config = config::load::read_config_from_env().unwrap();
+    let config = data_dance::config::load::read_config_from_env().unwrap();
 
-    let context = context::DataDanceContext {
+    let context = data_dance::context::DataDanceContext {
         executor: JobExecutor::new(config.clone()),
         config,
     };

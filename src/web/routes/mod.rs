@@ -49,7 +49,7 @@ where L::Acceptor: 'static {
 
 pub async fn try_build_routes(context: Arc<DataDanceContext>) -> Result<impl Endpoint, ()> {
     let ui_router = ui_router(&context);
-    let api_service = api_service(&context).server("/api");
+    let api_service = api_service().server("/api");
     let api_swagger = api_service.swagger_ui();
     let api_spec = api_service.spec_endpoint();
 

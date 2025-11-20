@@ -27,7 +27,7 @@ impl DataDanceApi {
     }
 }
 
-pub fn api_service(context: &Arc<DataDanceContext>) -> OpenApiService<impl OpenApi + use<>, ()> {
+pub fn api_service() -> OpenApiService<impl OpenApi + use<>, ()> {
     OpenApiService::new(
         DataDanceApi, "DataDance API", 
         env!("CARGO_PKG_VERSION")
